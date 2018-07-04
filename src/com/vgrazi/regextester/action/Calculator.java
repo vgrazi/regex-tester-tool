@@ -2,7 +2,6 @@ package com.vgrazi.regextester.action;
 
 import com.vgrazi.regextester.component.ColorRange;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,20 +13,19 @@ import java.util.Stack;
 public class Calculator {
     public static ColorRange[] parseGroupRanges(String regex, Color color) throws UnmatchedLeftParenException
     {
-        boolean newLine = false;
         List<ColorRange> list = new ArrayList<>();
         Stack<ColorRange> stack = new Stack<>();
         for(int index = 0; index < regex.length(); index++) {
             char ch = regex.charAt(index);
             if(ch == '(') {
-                if(!isEscaped(regex, index)) {
+                if(isNotEscaped(regex, index)) {
                     // for now, set the size == 0. We will adjust it as required when a right paren turns up
                     ColorRange range = new ColorRange(color, index, 0, false);
                     stack.push(range);
                 }
             }
             else if(ch == ')') {
-                if (!isEscaped(regex, index)) {
+                if (isNotEscaped(regex, index)) {
                     if(!stack.isEmpty()) {
                         ColorRange colorRange = stack.pop();
                         colorRange.setEnd(index);
@@ -48,7 +46,7 @@ public class Calculator {
     /**
      * checks that the character at the supplied index is not escaped
      */
-    private static boolean isEscaped(String regex, int index) {
+    private static boolean isNotEscaped(String regex, int index) {
         // count the number of consecutive \ characters preceding the supplied index
         // if this is odd return true
         int count = 0;
@@ -60,7 +58,7 @@ public class Calculator {
                 break;
             }
         }
-        return count %2 == 1;
+        return count % 2 ==0;
     }
 
 }

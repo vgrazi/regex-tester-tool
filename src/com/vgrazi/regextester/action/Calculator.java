@@ -21,7 +21,7 @@ public class Calculator {
             char ch = regex.charAt(index);
             if(ch == '(') {
                 if(!isEscaped(regex, index)) {
-                    // for now, set the size == 0. We will fix it when a right paren turns up
+                    // for now, set the size == 0. We will adjust it as required when a right paren turns up
                     ColorRange range = new ColorRange(color, index, 0, false);
                     stack.push(range);
                 }

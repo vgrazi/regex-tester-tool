@@ -13,6 +13,9 @@ import static com.vgrazi.regextester.component.Constants.GROUP_COLOR;
 import static com.vgrazi.regextester.component.Constants.RED_BORDER;
 import static com.vgrazi.regextester.component.Constants.WHITE_BORDER;
 
+/**
+ * This is the JTextPane that renders the regex pattern. When user positions the cursor just after a parenthesis, highlights that paren and the paired opening or closing paren
+ */
 public class PatternPane extends JTextPane {
     /**
      * As we navigate the pattern pane, we update the character pane accordingly. Therefore we need a reference
@@ -49,10 +52,13 @@ public class PatternPane extends JTextPane {
         });
     }
 
+    /**
+     * Renders the matching groups, if any, in the character pane with additional highlighting
+     * @param characterPane
+     */
     private void render(JTextPane characterPane) {
         String text = getText();
         Colorizer.resetColor(getStyledDocument());
-//        Colorizer.resetColor(characterPane.getStyledDocument());
         try {
             setBorder(WHITE_BORDER);
             ColorRange[] colorRanges = Calculator.parseGroupRanges(text, GROUP_COLOR);

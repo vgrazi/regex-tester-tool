@@ -97,7 +97,7 @@ public class RegexTester {
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, ButtonGroup buttonGroup) {
         try {
-            Colorizer.renderFindCharacterPane(characterPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
+            Colorizer.renderCharacterPane(characterPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             patternPane.setBorder(Constants.RED_BORDER);

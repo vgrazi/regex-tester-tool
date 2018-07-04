@@ -20,6 +20,12 @@ import static com.vgrazi.regextester.component.Constants.BACKGROUND_COLOR;
  */
 public class Colorizer {
 
+    /**
+     * Styles the docs by coloring all of the color ranges. If resetColor is true, first sets the default color
+     * @param doc
+     * @param resetColor
+     * @param colorRanges
+     */
     public static void colorize(StyledDocument doc, boolean resetColor, ColorRange... colorRanges) {
         Style font = doc.getStyle("highlights");
         if (resetColor) {
@@ -52,7 +58,13 @@ public class Colorizer {
         colorize(characterPane.getStyledDocument(), false, list.toArray(ranges));
     }
 
-    public static void renderFindCharacterPane(JTextPane characterPane, String regex, String actionCommand) {
+    /**
+     * Renders the character pane, according to the selected radio button
+     * @param characterPane
+     * @param regex
+     * @param actionCommand
+     */
+    public static void renderCharacterPane(JTextPane characterPane, String regex, String actionCommand) {
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         Pattern pattern = Pattern.compile(regex);

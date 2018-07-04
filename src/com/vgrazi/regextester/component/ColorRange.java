@@ -2,6 +2,12 @@ package com.vgrazi.regextester.component;
 
 import java.awt.*;
 
+/**
+ * This is the fundamental class used for containing ranges and colors.
+ * start is the position of the first character in the range, end is the last character (inclusive) and size is calculated as end-start+1
+ * If inclusive is true, that tells the renderer
+ * to color the entire range, whereas if it is fault, it only colors the first and last characters
+ */
 public class ColorRange {
     private final Color color;
     private final int start;
@@ -36,10 +42,6 @@ public class ColorRange {
 
     public void setEnd(int end) {
         this.end = end;
-    }
-
-    private void setSize(int size) {
-        this.end = size - start-1;
     }
 
     public int getEnd() {

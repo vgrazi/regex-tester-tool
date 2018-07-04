@@ -2,11 +2,17 @@ package com.vgrazi.regextester.action;
 
 import com.vgrazi.regextester.component.ColorRange;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import static com.vgrazi.regextester.component.Constants.GROUP_COLOR;
+import static com.vgrazi.regextester.component.Constants.HIGHLIGHT_COLOR;
 
 /**
  * Calculates all of the groups in a Regex pattern, calculates all of the matches in a string, etc
@@ -71,7 +77,7 @@ public class Calculator {
     private static void processCommand(Matcher matcher, List<ColorRange> list) {
         int start = matcher.start();
         int end = matcher.end();
-        ColorRange range = new ColorRange(Color.CYAN, start, end-1, true);
+        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start, end-1, true);
         list.add(range);
     }
 
@@ -91,5 +97,18 @@ public class Calculator {
             }
         }
         return count % 2 ==0;
+    }
+
+    public static List<ColorRange> calculateMatchingGroups(JTextPane characterPane, int groupIndex, String regex) throws PatternSyntaxException {
+        List<ColorRange> list = new ArrayList<>();
+        Pattern pattern =Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(characterPane.getText());
+        while(matcher.find()) {
+            int start = matcher.start(groupIndex);
+            int end = matcher.end(groupIndex) - 1;
+            ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
+            list.add(range);
+        }
+        return list;
     }
 }

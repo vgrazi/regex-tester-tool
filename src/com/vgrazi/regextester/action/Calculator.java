@@ -19,7 +19,6 @@ public class Calculator {
         Stack<ColorRange> stack = new Stack<>();
         for(int index = 0; index < regex.length(); index++) {
             char ch = regex.charAt(index);
-            // todo: make sure these are not escaped. Ignore
             if(ch == '(') {
                 if(!isEscaped(regex, index)) {
                     // for now, set the size == 0. We will fix it when a right paren turns up
@@ -47,13 +46,21 @@ public class Calculator {
     }
 
     /**
-     * checks that the previous character is not an escape
-     * @param regex
-     * @param i
-     * @return
+     * checks that the character at the supplied index is not escaped
      */
-    private static boolean isEscaped(String regex, int i) {
-        return false;
+    private static boolean isEscaped(String regex, int index) {
+        // count the number of consecutive \ characters preceding the supplied index
+        // if this is odd return true
+        int count = 0;
+        for(int i = index -1; i>=0; i++){
+            if(regex.charAt(i) == '\\') {
+                count++;
+            }
+            else{
+                break;
+            }
+        }
+        return count %2 == 1;
     }
 
 }

@@ -11,6 +11,7 @@ public interface Constants {
     // use a white border rather than null, so that no spacing shift when removing the red border
     Border WHITE_BORDER = BorderFactory.createLineBorder(BACKGROUND_COLOR);
     Border RED_BORDER = BorderFactory.createLineBorder(Color.red);
-    Font DEFAULT_FONT = new Font("Courier New", Font.PLAIN, 20);
+    Font DEFAULT_PANE_FONT = new Font("Courier New", Font.PLAIN, 20);
+    Font DEFAULT_PANEL_FONT = new Font("Arial", Font.PLAIN, 16);
     Color FONT_COLOR = Color.BLACK;
 }

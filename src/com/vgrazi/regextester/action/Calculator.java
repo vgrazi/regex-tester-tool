@@ -115,12 +115,13 @@ public class Calculator {
      * @param characterPane
      * @param groupIndex
      * @param regex
+     * @param flags
      * @return
      * @throws PatternSyntaxException
      */
-    public static List<ColorRange> calculateMatchingGroups(JTextPane characterPane, int groupIndex, String regex) throws PatternSyntaxException {
+    public static List<ColorRange> calculateMatchingGroups(JTextPane characterPane, int groupIndex, String regex, int flags) throws PatternSyntaxException {
         List<ColorRange> list = new ArrayList<>();
-        Pattern pattern =Pattern.compile(regex);
+        Pattern pattern =Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
         while(matcher.find()) {
             int start = matcher.start(groupIndex);

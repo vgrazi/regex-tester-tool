@@ -21,6 +21,7 @@ public class PatternPane extends JTextPane {
      * As we navigate the pattern pane, we update the character pane accordingly. Therefore we need a reference
      */
     private JTextPane characterPane;
+    private int flags;
 
     public PatternPane(final JTextPane characterPane) {
         this.characterPane = characterPane;
@@ -30,13 +31,13 @@ public class PatternPane extends JTextPane {
                 new KeyAdapter() {
                     @Override
                     public synchronized void keyReleased(KeyEvent e) {
-                        render(characterPane);
+                        render();
                     }
                 });
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                render(characterPane);
+                render();
             }
 
             @Override
@@ -47,16 +48,15 @@ public class PatternPane extends JTextPane {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                render(characterPane);
+                render();
             }
         });
     }
 
     /**
      * Renders the matching groups, if any, in the character pane with additional highlighting
-     * @param characterPane
      */
-    private void render(JTextPane characterPane) {
+    private void render() {
         String text = getText();
         Colorizer.resetColor(getStyledDocument());
         try {
@@ -72,7 +72,7 @@ public class PatternPane extends JTextPane {
                     int finalGroupIndex = groupIndex;
                     Runnable runnable = () -> {
                         try {
-                            Colorizer.highlightMatchingGroups(characterPane, finalGroupIndex + 1, getText());
+                            Colorizer.highlightMatchingGroups(characterPane, finalGroupIndex + 1, getText(), flags);
                         } catch (PatternSyntaxException e) {
                             setBorder(RED_BORDER);
                         }
@@ -87,4 +87,8 @@ public class PatternPane extends JTextPane {
         }
     }
 
+    public void setFlags(int flags) {
+        this.flags = flags;
+        render();
+    }
 }

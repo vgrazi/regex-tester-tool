@@ -2,7 +2,6 @@ package com.vgrazi.regextester.action;
 
 import com.vgrazi.regextester.component.ColorRange;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,9 +50,10 @@ public class Colorizer {
      * @param characterPane
      * @param groupIndex
      * @param regex
+     * @param flags
      */
-    public static void highlightMatchingGroups(JTextPane characterPane, int groupIndex, String regex) {
-        List<ColorRange> list = Calculator.calculateMatchingGroups(characterPane, groupIndex, regex);
+    public static void highlightMatchingGroups(JTextPane characterPane, int groupIndex, String regex, int flags) {
+        List<ColorRange> list = Calculator.calculateMatchingGroups(characterPane, groupIndex, regex, flags);
         ColorRange[] ranges = new ColorRange[list.size()];
         colorize(characterPane.getStyledDocument(), false, list.toArray(ranges));
     }
@@ -63,11 +63,12 @@ public class Colorizer {
      * @param characterPane
      * @param regex
      * @param actionCommand
+     * @param flags
      */
-    public static void renderCharacterPane(JTextPane characterPane, String regex, String actionCommand) {
+    public static void renderCharacterPane(JTextPane characterPane, String regex, String actionCommand, int flags) {
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
-        Pattern pattern = Pattern.compile(regex);
+        Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(text);
         switch(actionCommand) {
             case "find":

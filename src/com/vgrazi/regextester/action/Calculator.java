@@ -6,6 +6,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Matcher;
 
 /**
  * Calculates all of the groups in a Regex pattern, calculates all of the matches in a string, etc
@@ -43,6 +44,37 @@ public class Calculator {
         return ranges;
     }
 
+    static List<ColorRange> processFindCommand(Matcher matcher) {
+        List<ColorRange> list = new ArrayList<>();
+        while(matcher.find()) {
+            processCommand(matcher, list);
+        }
+        return list;
+    }
+
+    static List<ColorRange> processLookingAtCommand(Matcher matcher) {
+        List<ColorRange> list = new ArrayList<>();
+        if(matcher.lookingAt()) {
+            processCommand(matcher, list);
+        }
+        return list;
+    }
+
+    static List<ColorRange> processMatchesCommand(Matcher matcher) {
+        List<ColorRange> list = new ArrayList<>();
+        if(matcher.matches()) {
+            processCommand(matcher, list);
+        }
+        return list;
+    }
+
+    private static void processCommand(Matcher matcher, List<ColorRange> list) {
+        int start = matcher.start();
+        int end = matcher.end();
+        ColorRange range = new ColorRange(Color.CYAN, start, end-1, true);
+        list.add(range);
+    }
+
     /**
      * checks that the character at the supplied index is not escaped
      */
@@ -60,5 +92,4 @@ public class Calculator {
         }
         return count % 2 ==0;
     }
-
 }

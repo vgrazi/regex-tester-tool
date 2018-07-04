@@ -11,18 +11,17 @@ import java.awt.event.KeyEvent;
 
 public class PatternPane extends JTextPane {
     public PatternPane() {
-        setFont(new Font("Courier New", Font.PLAIN, 20));
         getStyledDocument().addStyle("fontSize", null);
 
         addKeyListener(
                 new KeyAdapter() {
                     @Override
-                    public void keyReleased(KeyEvent e) {
-                        int textLength = getText().length();
-                        Colorizer.colorize(getStyledDocument(), new ColorRange(Color.white, 0, textLength));
-                        ColorRange[] colorRanges = null;
+                    public synchronized void keyReleased(KeyEvent e) {
+                        String text = getText();
+                        int textLength = text.length();
+                        Colorizer.resetColor(getStyledDocument());
                         try {
-                            colorRanges = Calculator.parseGroupRanges(getText(), Color.cyan);
+                            ColorRange[] colorRanges = Calculator.parseGroupRanges(text, Color.cyan);
                             // if the cursor is at the start or end of any range, colorize that one
                             int position = getCaretPosition();
                             for(ColorRange range: colorRanges) {
@@ -38,4 +37,5 @@ public class PatternPane extends JTextPane {
                     }
                 });
     }
+
 }

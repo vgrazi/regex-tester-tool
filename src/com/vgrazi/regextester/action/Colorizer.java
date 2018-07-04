@@ -36,25 +36,36 @@ public class Colorizer {
         });
     }
 
-    public static void renderFindCharacterPane(JTextPane characterPane, String regex) {
+    public static void renderFindCharacterPane(JTextPane characterPane, String regex, String actionCommand) {
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         try {
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(text);
-            while(matcher.find()) {
-                int start = matcher.start();
-                int end = matcher.end();
-                ColorRange range = new ColorRange(Color.CYAN, start, end-1, true);
-                list.add(range);
+            switch(actionCommand) {
+                case "find":
+                    list = Calculator.processFindCommand(matcher);
+                    break;
+                case "looking-at":
+                    list = Calculator.processLookingAtCommand(matcher);
+                    break;
+                case "matches":
+                    list = Calculator.processMatchesCommand(matcher);
             }
             ColorRange[] ranges = new ColorRange[list.size()];
-            System.out.println(list);
             colorize(characterPane.getStyledDocument(), list.toArray(ranges));
+
         } catch (Exception e) {
             System.out.println("parse exception");
             //disregard, the pattern is not valid
-            // todo:  add a visual that it is invalid
+            // todo:  add a visual indicating that the pattern is invalid
         }
+    }
+
+    /**
+     * Resets the coloring to none
+     */
+    public static void resetColor(StyledDocument doc) {
+        colorize(doc, new ColorRange(Color.white, 0, doc.getLength()));
     }
 }

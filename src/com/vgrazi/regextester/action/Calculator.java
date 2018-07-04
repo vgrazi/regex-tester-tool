@@ -36,8 +36,9 @@ public class Calculator {
             if(ch == '(') {
                 if(isNotEscaped(regex, index)) {
                     // for now, set the size == 0. We will adjust it as required when a right paren turns up
-                    ColorRange range = new ColorRange(color, index, 0, false);
-                    stack.push(range);
+                    ColorRange colorRange = new ColorRange(color, index, 0, false);
+                    stack.push(colorRange);
+                    list.add(colorRange);
                 }
             }
             else if(ch == ')') {
@@ -45,7 +46,6 @@ public class Calculator {
                     if(!stack.isEmpty()) {
                         ColorRange colorRange = stack.pop();
                         colorRange.setEnd(index);
-                        list.add(colorRange);
                     }
                     else {
                         throw new UnmatchedLeftParenException(index);

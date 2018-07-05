@@ -9,7 +9,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.regex.Pattern;
 
-import static com.vgrazi.regextester.component.Constants.DEFAULT_PANEL_FONT;
+import static com.vgrazi.regextester.component.Constants.DEFAULT_LABEL_FONT;
+import static com.vgrazi.regextester.component.Constants.DEFAULT_PANE_FONT;
 
 public class RegexTester {
 
@@ -26,7 +27,7 @@ public class RegexTester {
 
         JLabel patternJlabel = new JLabel("Pattern  ");
         patternJlabel.setBackground(Color.LIGHT_GRAY);
-        patternJlabel.setFont(DEFAULT_PANEL_FONT);
+        patternJlabel.setFont(DEFAULT_LABEL_FONT);
         topPanel.add(patternJlabel, BorderLayout.WEST);
 
         splitPane.add(topPanel);
@@ -40,7 +41,7 @@ public class RegexTester {
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
         JTextPane auxiliaryPanel = new JTextPane();
-        auxiliaryPanel.setFont(DEFAULT_PANEL_FONT);
+        auxiliaryPanel.setFont(DEFAULT_PANE_FONT);
 
         PatternPane patternPane = new PatternPane(characterPane, auxiliaryPanel);
 
@@ -105,11 +106,11 @@ public class RegexTester {
         buttonGroup.add(splitButton);
         buttonGroup.add(replaceButton);
 
-        findButton.setFont(DEFAULT_PANEL_FONT);
-        matchButton.setFont(DEFAULT_PANEL_FONT);
-        lookingAtButton.setFont(DEFAULT_PANEL_FONT);
-        splitButton.setFont(DEFAULT_PANEL_FONT);
-        replaceButton.setFont(DEFAULT_PANEL_FONT);
+        findButton.setFont(DEFAULT_LABEL_FONT);
+        matchButton.setFont(DEFAULT_LABEL_FONT);
+        lookingAtButton.setFont(DEFAULT_LABEL_FONT);
+        splitButton.setFont(DEFAULT_LABEL_FONT);
+        replaceButton.setFont(DEFAULT_LABEL_FONT);
 
         JPanel buttonPanel = new JPanel();
 
@@ -131,11 +132,11 @@ public class RegexTester {
         buttonPanel.add(literalButton);
         buttonPanel.add(multilineButton);
 
-        caseButton.setFont(DEFAULT_PANEL_FONT);
-        commentsButton.setFont(DEFAULT_PANEL_FONT);
-        dotallButton.setFont(DEFAULT_PANEL_FONT);
-        literalButton.setFont(DEFAULT_PANEL_FONT);
-        multilineButton.setFont(DEFAULT_PANEL_FONT);
+        caseButton.setFont(DEFAULT_LABEL_FONT);
+        commentsButton.setFont(DEFAULT_LABEL_FONT);
+        dotallButton.setFont(DEFAULT_LABEL_FONT);
+        literalButton.setFont(DEFAULT_LABEL_FONT);
+        multilineButton.setFont(DEFAULT_LABEL_FONT);
 
         ActionListener recalcFlagListener = e -> {
             flags = recalculateFlags(caseButton, commentsButton, dotallButton, literalButton, multilineButton);

@@ -12,6 +12,6 @@ public interface Constants {
     Border WHITE_BORDER = BorderFactory.createLineBorder(BACKGROUND_COLOR);
     Border RED_BORDER = BorderFactory.createLineBorder(Color.red);
     Font DEFAULT_PANE_FONT = new Font("Courier New", Font.PLAIN, 20);
-    Font DEFAULT_PANEL_FONT = new Font("Arial", Font.PLAIN, 16);
+    Font DEFAULT_LABEL_FONT = new Font("Arial", Font.PLAIN, 16);
     Color FONT_COLOR = Color.BLACK;
 }

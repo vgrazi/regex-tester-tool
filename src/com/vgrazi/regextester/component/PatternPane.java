@@ -1,7 +1,7 @@
 package com.vgrazi.regextester.component;
 
 import com.vgrazi.regextester.action.Calculator;
-import com.vgrazi.regextester.action.Colorizer;
+import com.vgrazi.regextester.action.Renderer;
 import com.vgrazi.regextester.action.UnmatchedLeftParenException;
 
 import javax.swing.*;
@@ -48,7 +48,7 @@ public class PatternPane extends JTextPane {
 
             @Override
             public void focusLost(FocusEvent e) {
-                Colorizer.resetColor(getStyledDocument());
+                Renderer.resetColor(getStyledDocument());
             }
         });
         addMouseListener(new MouseAdapter() {
@@ -64,15 +64,14 @@ public class PatternPane extends JTextPane {
      */
     private void render() {
         String text = getText();
-        Colorizer.resetColor(getStyledDocument());
+        Renderer.resetColor(getStyledDocument());
         try {
             setBorder(WHITE_BORDER);
-
+            auxiliaryPane.setLayout(new BoxLayout(auxiliaryPane, BoxLayout.Y_AXIS));
             List<String> names = getNamedGroups(text);
-            String namesString = names.toString();
-            namesString = namesString.substring(1, namesString.length() -1);
-            namesString = namesString.replaceAll(",\\s*","\n");
-            auxiliaryPane.setText(namesString);
+            auxiliaryPane.removeAll();
+            ButtonGroup buttonGroup = new ButtonGroup();
+            names.forEach(name->addRadioButton(name, buttonGroup, auxiliaryPane));
 
             ColorRange[] colorRanges = Calculator.parseGroupRanges(text, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
@@ -80,12 +79,12 @@ public class PatternPane extends JTextPane {
             for (int groupIndex = 0; groupIndex < colorRanges.length; groupIndex++) {
                 ColorRange range = colorRanges[groupIndex];
                 if (range.getStart() == position - 1 || range.getEnd() == position - 1) {
-                    Colorizer.colorize(getStyledDocument(), true, range);
+                    Renderer.colorize(getStyledDocument(), true, range);
                     // group index starts at 1, so add 1 to the list position
                     int finalGroupIndex = groupIndex;
                     Runnable runnable = () -> {
                         try {
-                            Colorizer.highlightMatchingGroups(characterPane, finalGroupIndex + 1, getText(), flags);
+                            Renderer.renderMatchingGroupsHighlightsInCharacterPane(characterPane, finalGroupIndex + 1, getText(), flags);
                         } catch (PatternSyntaxException e) {
                             setBorder(RED_BORDER);
                         }
@@ -96,8 +95,16 @@ public class PatternPane extends JTextPane {
             }
         } catch (UnmatchedLeftParenException e1) {
             ColorRange range = new ColorRange(Color.red, e1.getPosition(), text.length() - 1);
-            Colorizer.colorize(getStyledDocument(), true, range);
+            Renderer.colorize(getStyledDocument(), true, range);
         }
+    }
+
+    private void addRadioButton(String name, ButtonGroup buttonGroup, JComponent parent) {
+        JRadioButton button = new JRadioButton(name);
+        button.setActionCommand(name);
+        buttonGroup.add(button);
+        parent.add(button);
+        button.setBackground(Color.white);
     }
 
     private List<String> getNamedGroups(String text) {

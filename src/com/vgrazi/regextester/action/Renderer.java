@@ -18,7 +18,7 @@ import static com.vgrazi.regextester.component.Constants.BACKGROUND_COLOR;
 /**
  * Given a set of ColorRange instances, applies the supplied color to those ranges
  */
-public class Colorizer {
+public class Renderer {
 
     /**
      * Styles the docs by coloring all of the color ranges. If resetColor is true, first sets the default color
@@ -45,6 +45,7 @@ public class Colorizer {
             }
         });
     }
+    private static String previousCommand;
 
     /**
      * When the caret has highlighted a group, we want to select the matching groups in the character pane
@@ -53,7 +54,7 @@ public class Colorizer {
      * @param regex
      * @param flags
      */
-    public static void highlightMatchingGroups(JTextPane characterPane, int groupIndex, String regex, int flags) {
+    public static void renderMatchingGroupsHighlightsInCharacterPane(JTextPane characterPane, int groupIndex, String regex, int flags) {
         List<ColorRange> list = Calculator.calculateMatchingGroups(characterPane, groupIndex, regex, flags);
         ColorRange[] ranges = new ColorRange[list.size()];
         colorize(characterPane.getStyledDocument(), false, list.toArray(ranges));
@@ -62,18 +63,23 @@ public class Colorizer {
     /**
      * Renders the character pane, according to the selected radio button
      * @param characterPane
-     * @param auxiliaryPanel
+     * @param auxiliaryPane
      * @param replacementPane
      * @param regex
      * @param actionCommand
      * @param flags
      */
-    public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPanel, JTextPane replacementPane, String regex, String actionCommand, int flags) {
+    public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, JTextPane replacementPane, String regex, String actionCommand, int flags) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(text);
+        if(!actionCommand.equals(previousCommand)) {
+            replacementPane.setText("");
+            auxiliaryPane.setText("");
+            previousCommand = actionCommand;
+        }
         switch(actionCommand) {
             case "find":
                 list = Calculator.processFindCommand(matcher);
@@ -85,10 +91,10 @@ public class Colorizer {
                 list = Calculator.processMatchesCommand(matcher);
                 break;
             case "split":
-                list = Calculator.processSplitCommand(auxiliaryPanel, text, pattern, matcher);
+                list = Calculator.processSplitCommand(auxiliaryPane, text, pattern, matcher);
                 break;
             case "replace":
-                list = Calculator.processReplaceAllCommand(auxiliaryPanel, replacementPane, matcher);
+                list = Calculator.processReplaceAllCommand(auxiliaryPane, replacementPane, matcher);
                 break;
         }
         ColorRange[] ranges = new ColorRange[list.size()];

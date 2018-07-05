@@ -1,0 +1,32 @@
+All events:
+Move cursor in pattern pane
+    render pattern pane
+    render character pane
+Modify text in pattern pane
+    render pattern pane
+    render character pane
+    render split
+    render replace
+    render named groups
+Modify text in character pane
+    render pattern pane
+    render character pane
+    render split
+    render replace
+    render named groups
+Select radio
+    render pattern pane
+    render character pane
+    render split
+    render replace
+    render named groups
+Select checkbox
+    render pattern pane
+    render character pane
+    render split
+    render replace
+    render named groups
+Change replacement text
+    render replace
+Select named group
+    render character pane

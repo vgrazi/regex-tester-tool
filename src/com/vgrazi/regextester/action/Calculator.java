@@ -99,12 +99,12 @@ public class Calculator {
         return list;
     }
 
-    static List<ColorRange> processSplitCommand(JTextPane auxiliaryPanel, String text, Pattern pattern, Matcher matcher) {
+    static List<ColorRange> processSplitCommand(JTextPane auxiliaryPane, String text, Pattern pattern, Matcher matcher) {
         List<ColorRange> list;
         list = processFindCommand(matcher);
         String[] split = pattern.split(text);
         String splitString = String.join("\n", split);
-        auxiliaryPanel.setText(splitString);
+        auxiliaryPane.setText(splitString);
         return list;
     }
 

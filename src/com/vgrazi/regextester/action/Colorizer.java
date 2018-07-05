@@ -1,6 +1,7 @@
 package com.vgrazi.regextester.action;
 
 import com.vgrazi.regextester.component.ColorRange;
+import com.vgrazi.regextester.component.Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,11 +63,13 @@ public class Colorizer {
      * Renders the character pane, according to the selected radio button
      * @param characterPane
      * @param auxiliaryPanel
+     * @param replacementPane
      * @param regex
      * @param actionCommand
      * @param flags
      */
-    public static void renderCharacterPane(JTextPane characterPane, JTextPane auxiliaryPanel, String regex, String actionCommand, int flags) {
+    public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPanel, JTextPane replacementPane, String regex, String actionCommand, int flags) {
+        replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         Pattern pattern = Pattern.compile(regex, flags);
@@ -82,10 +85,10 @@ public class Colorizer {
                 list = Calculator.processMatchesCommand(matcher);
                 break;
             case "split":
-                list = Calculator.processFindCommand(matcher);
-                String[] split = pattern.split(text);
-                String splitString = String.join("\n", split);
-                auxiliaryPanel.setText(splitString);
+                list = Calculator.processSplitCommand(auxiliaryPanel, text, pattern, matcher);
+                break;
+            case "replace":
+                list = Calculator.processReplaceAllCommand(auxiliaryPanel, replacementPane, matcher);
                 break;
         }
         ColorRange[] ranges = new ColorRange[list.size()];

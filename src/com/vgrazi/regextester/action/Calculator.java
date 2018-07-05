@@ -1,6 +1,7 @@
 package com.vgrazi.regextester.action;
 
 import com.vgrazi.regextester.component.ColorRange;
+import com.vgrazi.regextester.component.Constants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -95,6 +96,31 @@ public class Calculator {
         if(matcher.matches()) {
             processCommand(matcher, list);
         }
+        return list;
+    }
+
+    static List<ColorRange> processSplitCommand(JTextPane auxiliaryPanel, String text, Pattern pattern, Matcher matcher) {
+        List<ColorRange> list;
+        list = processFindCommand(matcher);
+        String[] split = pattern.split(text);
+        String splitString = String.join("\n", split);
+        auxiliaryPanel.setText(splitString);
+        return list;
+    }
+
+    static List<ColorRange> processReplaceAllCommand(JTextPane auxiliaryPanel, JTextPane replacementPane, Matcher matcher) {
+        List<ColorRange> list;
+        list = processFindCommand(matcher);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                String replacement = replacementPane.getText();
+                final String replaced = matcher.replaceAll(replacement);
+                auxiliaryPanel.setText(replaced);
+            } catch (Exception e) {
+                auxiliaryPanel.setText("");
+                replacementPane.setBorder(Constants.RED_BORDER);
+            }
+        });
         return list;
     }
 

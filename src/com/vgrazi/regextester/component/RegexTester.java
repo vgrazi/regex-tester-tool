@@ -26,6 +26,7 @@ public class RegexTester {
         topPanel.setLayout(new BorderLayout());
 
         JLabel patternJlabel = new JLabel("Pattern  ");
+        patternJlabel.setVerticalAlignment(SwingConstants.TOP);
         patternJlabel.setBackground(Color.LIGHT_GRAY);
         patternJlabel.setFont(DEFAULT_LABEL_FONT);
         topPanel.add(patternJlabel, BorderLayout.WEST);
@@ -40,13 +41,19 @@ public class RegexTester {
         JTextPane characterPane = new JTextPane();
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
-        JTextPane auxiliaryPanel = new JTextPane();
-        auxiliaryPanel.setFont(DEFAULT_PANE_FONT);
+        JSplitPane auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        auxiliarySplit.setDividerLocation(40);
+        JTextPane auxiliaryPane = new JTextPane();
+        auxiliaryPane.setFont(DEFAULT_PANE_FONT);
 
-        PatternPane patternPane = new PatternPane(characterPane, auxiliaryPanel);
+        JTextPane replacementPane = new JTextPane();
+        replacementPane.setFont(DEFAULT_PANE_FONT);
+        auxiliarySplit.add(replacementPane);
+        auxiliarySplit.add(auxiliaryPane);
+        PatternPane patternPane = new PatternPane(characterPane, auxiliaryPane);
 
         ButtonGroup buttonGroup = new ButtonGroup();
-        JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPanel, buttonGroup);
+        JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPane, replacementPane, buttonGroup);
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
 
         formatPatternPane(patternPane);
@@ -56,14 +63,21 @@ public class RegexTester {
         KeyAdapter keyListener = new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                renderCharacterPane(characterPane, patternPane, auxiliaryPanel, buttonGroup);
+                renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
             }
         };
         characterPane.addKeyListener(keyListener);
         patternPane.addKeyListener(keyListener);
+        replacementPane.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                Colorizer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
+            }
+        });
+
 
         bottomPane.add(bottomPanel);
-        bottomPane.add(auxiliaryPanel);
+        bottomPane.add(auxiliarySplit);
         splitPane.add(bottomPane);
 
         frame.getContentPane().add(splitPane);
@@ -86,7 +100,7 @@ public class RegexTester {
         characterPane.getStyledDocument().addStyle("highlights", null);
     }
 
-    private static JPanel createButtonPanel(PatternPane patternPane, JTextPane characterPane, JTextPane auxiliaryPanel, ButtonGroup buttonGroup) {
+    private static JPanel createButtonPanel(PatternPane patternPane, JTextPane characterPane, JTextPane auxiliaryPanel, JTextPane replacementPane, ButtonGroup buttonGroup) {
         JRadioButton matchButton = new JRadioButton("Matches");
         JRadioButton lookingAtButton = new JRadioButton("Looking at");
         JRadioButton splitButton = new JRadioButton("Split");
@@ -140,7 +154,7 @@ public class RegexTester {
 
         ActionListener recalcFlagListener = e -> {
             flags = recalculateFlags(caseButton, commentsButton, dotallButton, literalButton, multilineButton);
-            renderCharacterPane(characterPane, patternPane, auxiliaryPanel, buttonGroup);
+            renderCharacterPane(characterPane, patternPane, auxiliaryPanel, replacementPane, buttonGroup);
             patternPane.setFlags(flags);
         };
         caseButton.addActionListener(recalcFlagListener);
@@ -148,7 +162,7 @@ public class RegexTester {
         dotallButton.addActionListener(recalcFlagListener);
         literalButton.addActionListener(recalcFlagListener);
         multilineButton.addActionListener(recalcFlagListener);
-        ActionListener actionListener = e -> renderCharacterPane(characterPane, patternPane, auxiliaryPanel, buttonGroup);
+        ActionListener actionListener = e -> renderCharacterPane(characterPane, patternPane, auxiliaryPanel, replacementPane, buttonGroup);
         findButton.addActionListener(actionListener);
         lookingAtButton.addActionListener(actionListener);
         matchButton.addActionListener(actionListener);
@@ -167,7 +181,7 @@ public class RegexTester {
         return flags;
     }
 
-    private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPanel, ButtonGroup buttonGroup) {
+    private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPanel, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {
             int caret = characterPane.getCaretPosition();
             // replace \n\r with \r to prevent upsetting count
@@ -176,7 +190,7 @@ public class RegexTester {
                 characterPane.setText(text);
                 characterPane.setCaretPosition(caret);
             }
-            Colorizer.renderCharacterPane(characterPane, auxiliaryPanel, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
+            Colorizer.renderCharacterPane(characterPane, auxiliaryPanel, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             patternPane.setBorder(Constants.RED_BORDER);

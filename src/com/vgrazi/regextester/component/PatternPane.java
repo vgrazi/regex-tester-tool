@@ -7,6 +7,10 @@ import com.vgrazi.regextester.action.UnmatchedLeftParenException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static com.vgrazi.regextester.component.Constants.GROUP_COLOR;
@@ -21,10 +25,12 @@ public class PatternPane extends JTextPane {
      * As we navigate the pattern pane, we update the character pane accordingly. Therefore we need a reference
      */
     private JTextPane characterPane;
+    private JTextPane auxiliaryPane;
     private int flags;
 
-    public PatternPane(final JTextPane characterPane) {
+    public PatternPane(final JTextPane characterPane, final JTextPane auxiliaryPane) {
         this.characterPane = characterPane;
+        this.auxiliaryPane = auxiliaryPane;
         getStyledDocument().addStyle("highlights", null);
 
         addKeyListener(
@@ -61,6 +67,13 @@ public class PatternPane extends JTextPane {
         Colorizer.resetColor(getStyledDocument());
         try {
             setBorder(WHITE_BORDER);
+
+            List<String> names = getNamedGroups(text);
+            String namesString = names.toString();
+            namesString = namesString.substring(1, namesString.length() -1);
+            namesString = namesString.replaceAll(",\\s*","\n");
+            auxiliaryPane.setText(namesString);
+
             ColorRange[] colorRanges = Calculator.parseGroupRanges(text, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
             int position = getCaretPosition();
@@ -85,6 +98,21 @@ public class PatternPane extends JTextPane {
             ColorRange range = new ColorRange(Color.red, e1.getPosition(), text.length() - 1);
             Colorizer.colorize(getStyledDocument(), true, range);
         }
+    }
+
+    private List<String> getNamedGroups(String text) {
+        List<String> list = new ArrayList<>();
+        try {
+            Pattern pattern = Pattern.compile("\\?<(.+?)>");
+            Matcher matcher = pattern.matcher(text);
+            while(matcher.find()) {
+                list.add(matcher.group(1));
+            }
+
+        } catch (Exception e) {
+            // swallow the error, this is not yet ready to compile
+        }
+        return list;
     }
 
     public void setFlags(int flags) {

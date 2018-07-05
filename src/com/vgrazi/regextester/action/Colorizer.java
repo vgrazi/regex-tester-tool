@@ -61,11 +61,12 @@ public class Colorizer {
     /**
      * Renders the character pane, according to the selected radio button
      * @param characterPane
+     * @param auxiliaryPanel
      * @param regex
      * @param actionCommand
      * @param flags
      */
-    public static void renderCharacterPane(JTextPane characterPane, String regex, String actionCommand, int flags) {
+    public static void renderCharacterPane(JTextPane characterPane, JTextPane auxiliaryPanel, String regex, String actionCommand, int flags) {
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         Pattern pattern = Pattern.compile(regex, flags);
@@ -79,6 +80,13 @@ public class Colorizer {
                 break;
             case "matches":
                 list = Calculator.processMatchesCommand(matcher);
+                break;
+            case "split":
+                list = Calculator.processFindCommand(matcher);
+                String[] split = pattern.split(text);
+                String splitString = String.join("\n", split);
+                auxiliaryPanel.setText(splitString);
+                break;
         }
         ColorRange[] ranges = new ColorRange[list.size()];
         colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));

@@ -147,13 +147,39 @@ public class Calculator {
      */
     public static List<ColorRange> calculateMatchingGroups(JTextPane characterPane, int groupIndex, String regex, int flags) throws PatternSyntaxException {
         List<ColorRange> list = new ArrayList<>();
-        Pattern pattern =Pattern.compile(regex, flags);
+        Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
         while(matcher.find()) {
             int start = matcher.start(groupIndex);
             int end = matcher.end(groupIndex) - 1;
             ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
             list.add(range);
+        }
+        return list;
+    }
+
+    /**
+     * Returns a list of all ranges from the character pane that match the group indexed.
+     * @param characterPane
+     * @param groupName
+     * @param regex
+     * @param flags
+     * @return
+     * @throws PatternSyntaxException
+     */
+    public static List<ColorRange> calculateMatchingGroup(JTextPane characterPane, String groupName, String regex, int flags) {
+        List<ColorRange> list = new ArrayList<>();
+        Pattern pattern = Pattern.compile(regex, flags);
+        Matcher matcher = pattern.matcher(characterPane.getText());
+        try {
+            while(matcher.find()) {
+                int start = matcher.start(groupName);
+                int end = matcher.end(groupName) - 1;
+                ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
+                list.add(range);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
         return list;
     }

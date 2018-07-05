@@ -105,6 +105,9 @@ public class PatternPane extends JTextPane {
         buttonGroup.add(button);
         parent.add(button);
         button.setBackground(Color.white);
+        button.addActionListener(actionEvent ->
+                Renderer.renderNamedGroupInCharacterPane(flags, name, this, characterPane, auxiliaryPane)
+        );
     }
 
     private List<String> getNamedGroups(String text) {

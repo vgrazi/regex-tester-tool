@@ -102,6 +102,22 @@ public class Renderer {
     }
 
     /**
+     * Highlights all matches in the character pane for the specified group name
+     * @param flags
+     * @param groupName
+     * @param patternPane
+     * @param characterPane
+     * @param auxiliaryPane
+     */
+    public static void renderNamedGroupInCharacterPane(int flags, String groupName, JTextPane patternPane, JTextPane characterPane, JTextPane auxiliaryPane) {
+        String regex = patternPane.getText();
+        List<ColorRange> list = Calculator.calculateMatchingGroup(characterPane, groupName, regex, flags);
+        auxiliaryPane.setText("");
+        ColorRange[] ranges = new ColorRange[list.size()];
+        colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
+    }
+
+    /**
      * Resets the coloring to none
      */
     public static void resetColor(StyledDocument doc) {

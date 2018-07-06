@@ -77,7 +77,6 @@ public class Renderer {
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(text);
         if(!actionCommand.equals(previousCommand)) {
-            replacementPane.setText("");
             auxiliaryPane.setText("");
             previousCommand = actionCommand;
         }

@@ -168,9 +168,14 @@ public class Calculator {
      * @throws PatternSyntaxException
      */
     public static List<ColorRange> calculateMatchingGroup(JTextPane characterPane, String groupName, String regex, int flags) {
-        List<ColorRange> list = new ArrayList<>();
+
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
+
+        // do the finds first, then the groups, so that the group highlighting will overlay the find highlights
+        List<ColorRange> list = Calculator.processFindCommand(matcher);
+        matcher = pattern.matcher(characterPane.getText());
+
         try {
             while(matcher.find()) {
                 int start = matcher.start(groupName);

@@ -37,13 +37,13 @@ public class PatternPane extends JTextPane {
                 new KeyAdapter() {
                     @Override
                     public synchronized void keyReleased(KeyEvent e) {
-                        render();
+                        renderMatchingGroupsInCharacterPane();
                     }
                 });
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                render();
+                renderMatchingGroupsInCharacterPane();
             }
 
             @Override
@@ -54,7 +54,7 @@ public class PatternPane extends JTextPane {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                render();
+                renderMatchingGroupsInCharacterPane();
             }
         });
     }
@@ -62,16 +62,17 @@ public class PatternPane extends JTextPane {
     /**
      * Renders the matching groups, if any, in the character pane with additional highlighting
      */
-    private void render() {
+    private void renderMatchingGroupsInCharacterPane() {
         String text = getText();
         Renderer.resetColor(getStyledDocument());
         try {
             setBorder(WHITE_BORDER);
             auxiliaryPane.setLayout(new BoxLayout(auxiliaryPane, BoxLayout.Y_AXIS));
-            List<String> names = getNamedGroups(text);
+            List<String> names = extractNamedGroups(text);
             auxiliaryPane.removeAll();
             ButtonGroup buttonGroup = new ButtonGroup();
             names.forEach(name->addRadioButton(name, buttonGroup, auxiliaryPane));
+            auxiliaryPane.doLayout();
 
             ColorRange[] colorRanges = Calculator.parseGroupRanges(text, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
@@ -99,18 +100,20 @@ public class PatternPane extends JTextPane {
         }
     }
 
-    private void addRadioButton(String name, ButtonGroup buttonGroup, JComponent parent) {
+    private void addRadioButton(final String name, ButtonGroup buttonGroup, JComponent parent) {
         JRadioButton button = new JRadioButton(name);
-        button.setActionCommand(name);
         buttonGroup.add(button);
         parent.add(button);
         button.setBackground(Color.white);
         button.addActionListener(actionEvent ->
-                Renderer.renderNamedGroupInCharacterPane(flags, name, this, characterPane, auxiliaryPane)
+                {
+                    SwingUtilities.invokeLater(() -> Renderer.renderNamedGroupInCharacterPane(flags, name, this, characterPane, auxiliaryPane));
+                }
         );
+        button.setActionCommand(name);
     }
 
-    private List<String> getNamedGroups(String text) {
+    private List<String> extractNamedGroups(String text) {
         List<String> list = new ArrayList<>();
         try {
             Pattern pattern = Pattern.compile("\\?<(.+?)>");
@@ -127,6 +130,6 @@ public class PatternPane extends JTextPane {
 
     public void setFlags(int flags) {
         this.flags = flags;
-        render();
+        renderMatchingGroupsInCharacterPane();
     }
 }

@@ -83,7 +83,7 @@ public class RegexTester {
 
         frame.getContentPane().add(splitPane);
 
-        frame.setBounds(100, 100, 1000, 600);
+        frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
     }
 

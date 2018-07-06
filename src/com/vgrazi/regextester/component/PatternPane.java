@@ -68,11 +68,11 @@ public class PatternPane extends JTextPane {
         try {
             setBorder(WHITE_BORDER);
             auxiliaryPane.setLayout(new BoxLayout(auxiliaryPane, BoxLayout.Y_AXIS));
-            List<String> names = extractNamedGroups(text);
-            auxiliaryPane.removeAll();
-            ButtonGroup buttonGroup = new ButtonGroup();
-            names.forEach(name->addRadioButton(name, buttonGroup, auxiliaryPane));
-            auxiliaryPane.doLayout();
+//            List<String> names = extractNamedGroups(text);
+//            auxiliaryPane.removeAll();
+//            ButtonGroup buttonGroup = new ButtonGroup();
+//            names.forEach(name->addRadioButton(name, buttonGroup, auxiliaryPane));
+//            auxiliaryPane.doLayout();
 
             ColorRange[] colorRanges = Calculator.parseGroupRanges(text, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
@@ -113,7 +113,7 @@ public class PatternPane extends JTextPane {
         button.setActionCommand(name);
     }
 
-    private List<String> extractNamedGroups(String text) {
+    public static List<String> extractNamedGroups(String text) {
         List<String> list = new ArrayList<>();
         try {
             Pattern pattern = Pattern.compile("\\?<(.+?)>");

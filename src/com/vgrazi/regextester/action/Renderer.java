@@ -14,6 +14,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import static com.vgrazi.regextester.component.Constants.BACKGROUND_COLOR;
+import static com.vgrazi.regextester.component.PatternPane.extractNamedGroups;
 
 /**
  * Given a set of ColorRange instances, applies the supplied color to those ranges
@@ -82,18 +83,25 @@ public class Renderer {
         }
         switch(actionCommand) {
             case "find":
+//                extractNamedGroups(regex);
                 list = Calculator.processFindCommand(matcher);
                 break;
             case "looking-at":
+//                extractNamedGroups(regex);
                 list = Calculator.processLookingAtCommand(matcher);
                 break;
             case "matches":
+                extractNamedGroups(regex);
                 list = Calculator.processMatchesCommand(matcher);
                 break;
             case "split":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
                 list = Calculator.processSplitCommand(auxiliaryPane, text, pattern, matcher);
                 break;
             case "replace":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
                 list = Calculator.processReplaceAllCommand(auxiliaryPane, replacementPane, matcher);
                 break;
         }

@@ -1,5 +1,32 @@
-# Created by .ignore support plugin (hsz.mobi)
-/.idea/
-out/
-regex-tester.iml
-src/com/vgrazi/regextester/RegexTesterPrototype.java
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+/.mvn/
+.gitignore
+.mvn/
+mvnw
+mvnw.cmd
+!/src/
+!/pom.xml

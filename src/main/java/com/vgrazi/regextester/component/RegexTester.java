@@ -16,7 +16,7 @@ public class RegexTester {
 
     private static int flags;
 
-    public static void main(String[] args) {
+    public void launch() {
         JFrame frame = new JFrame("Regex Test Tool");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);

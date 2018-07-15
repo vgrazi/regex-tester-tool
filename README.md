@@ -1,5 +1,5 @@
 # regex-tester-tool
-A Java Swing UI that allows you to build and analyze your Regular expressions.
+A Java Swing UI self executing jar, that allows you to build and analyze your Regular expressions.
 
 Type in a Regex pattern in the upper text area, and a string of one or 
 more lines in the lower text area, and performs various regex functions: find, matches, lookingAt, split, and replace.

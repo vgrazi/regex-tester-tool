@@ -73,8 +73,7 @@ public class RegexTester {
         patternPane.addKeyListener(keyListener);
         replacementPane.addKeyListener(new KeyAdapter() {
             @Override
-            //todo: can we replace this with keyTyped???
-            public void keyReleased(KeyEvent e) {
+            public void keyTyped(KeyEvent e) {
                 Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             }
         });

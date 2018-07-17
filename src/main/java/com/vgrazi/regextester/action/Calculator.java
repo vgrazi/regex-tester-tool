@@ -116,7 +116,10 @@ public class Calculator {
         SwingUtilities.invokeLater(() -> {
             try {
                 String replacement = replacementPane.getText();
-                final String replaced = matcher.replaceAll(replacement);
+                String replaced = matcher.replaceAll(replacement);
+                if(!replaced.equals("")) {
+                    replaced = ">" + replaced.replaceAll("\n", "\n>");
+                }
                 auxiliaryPanel.setText(replaced);
             } catch (Exception e) {
                 auxiliaryPanel.setText("");

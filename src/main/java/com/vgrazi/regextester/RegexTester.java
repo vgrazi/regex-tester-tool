@@ -1,6 +1,8 @@
-package com.vgrazi.regextester.component;
+package com.vgrazi.regextester;
 
 import com.vgrazi.regextester.action.Renderer;
+import com.vgrazi.regextester.component.Constants;
+import com.vgrazi.regextester.component.PatternPane;
 
 import javax.swing.*;
 import java.awt.*;
@@ -192,5 +194,4 @@ public class RegexTester {
 
         }
     }
-
 }

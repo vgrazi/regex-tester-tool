@@ -71,7 +71,8 @@ public class RegexTester {
         patternPane.addKeyListener(keyListener);
         replacementPane.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyTyped(KeyEvent e) {
+            //todo: can we replace this with keyTyped???
+            public void keyReleased(KeyEvent e) {
                 Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             }
         });
@@ -134,7 +135,7 @@ public class RegexTester {
         buttonPanel.add(matchButton);
         buttonPanel.add(lookingAtButton);
         buttonPanel.add(splitButton);
-        buttonPanel.add(replaceButton);
+//        buttonPanel.add(replaceButton);
         buttonPanel.add(Box.createHorizontalGlue());
         JCheckBox caseButton = new JCheckBox("Case Insensitive");
         JCheckBox commentsButton = new JCheckBox("Comments");
@@ -174,23 +175,16 @@ public class RegexTester {
 
     private static int recalculateFlags(JCheckBox caseButton, JCheckBox commentsButton, JCheckBox dotallButton, JCheckBox literalButton, JCheckBox multilineButton) {
         int flags = 0;
-        flags |= caseButton.isSelected()? Pattern.CASE_INSENSITIVE:0;
-        flags |= commentsButton.isSelected()? Pattern.COMMENTS:0;
-        flags |= dotallButton.isSelected()? Pattern.DOTALL:0;
-        flags |= literalButton.isSelected()? Pattern.LITERAL:0;
-        flags |= multilineButton.isSelected()? Pattern.MULTILINE:0;
+        flags |= caseButton.isSelected() ? Pattern.CASE_INSENSITIVE : 0;
+        flags |= commentsButton.isSelected() ? Pattern.COMMENTS : 0;
+        flags |= dotallButton.isSelected() ? Pattern.DOTALL : 0;
+        flags |= literalButton.isSelected() ? Pattern.LITERAL : 0;
+        flags |= multilineButton.isSelected() ? Pattern.MULTILINE : 0;
         return flags;
     }
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {
-            int caret = characterPane.getCaretPosition();
-            // replace \n\r with \r to prevent upsetting count
-            if(characterPane.getText().contains("\\n\\r")) {
-                String text = characterPane.getText().replaceAll("\\n\\r", "\\r");
-                characterPane.setText(text);
-                characterPane.setCaretPosition(caret);
-            }
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {

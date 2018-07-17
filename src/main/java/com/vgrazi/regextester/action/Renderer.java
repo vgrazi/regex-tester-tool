@@ -83,25 +83,26 @@ public class Renderer {
         switch(actionCommand) {
             case "find":
 //                extractNamedGroups(regex);
-                list = Calculator.processFindCommand(matcher);
+//                list = Calculator.processFindCommand(matcher, text);
+                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
                 break;
             case "looking-at":
 //                extractNamedGroups(regex);
-                list = Calculator.processLookingAtCommand(matcher);
+                list = Calculator.processLookingAtCommand(matcher, text);
                 break;
             case "matches":
                 extractNamedGroups(regex);
-                list = Calculator.processMatchesCommand(matcher);
+                list = Calculator.processMatchesCommand(matcher, text);
                 break;
             case "split":
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();
-                list = Calculator.processSplitCommand(auxiliaryPane, text, pattern, matcher);
+                list = Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
                 break;
             case "replace":
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();
-                list = Calculator.processReplaceAllCommand(auxiliaryPane, replacementPane, matcher);
+                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
                 break;
         }
         ColorRange[] ranges = new ColorRange[list.size()];

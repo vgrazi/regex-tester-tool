@@ -63,12 +63,13 @@ public class Calculator {
     /**
      * Give that the user selected the Find radio, calculates the highlight ranges for all matches
      * @param matcher
+     * @param text the target string
      * @return
      */
-    static List<ColorRange> processFindCommand(Matcher matcher) {
+    static List<ColorRange> processFindCommand(Matcher matcher, String text) {
         List<ColorRange> list = new ArrayList<>();
         while(matcher.find()) {
-            processCommand(matcher, list);
+            processCommand(matcher, list, text);
         }
         return list;
     }
@@ -76,12 +77,13 @@ public class Calculator {
     /**
      * Give that the user selected the Looking at radio, calculates the highlight range, if any
      * @param matcher
+     * @param text the target string
      * @return
      */
-    static List<ColorRange> processLookingAtCommand(Matcher matcher) {
+    static List<ColorRange> processLookingAtCommand(Matcher matcher, String text) {
         List<ColorRange> list = new ArrayList<>();
         if(matcher.lookingAt()) {
-            processCommand(matcher, list);
+            processCommand(matcher, list, text);
         }
         return list;
     }
@@ -89,28 +91,28 @@ public class Calculator {
     /**
      * Give that the user selected the Matches radio, calculates the highlight ranges for the match, if any
      * @param matcher
+     * @param text the target string
      * @return
      */
-    static List<ColorRange> processMatchesCommand(Matcher matcher) {
+    static List<ColorRange> processMatchesCommand(Matcher matcher, String text) {
         List<ColorRange> list = new ArrayList<>();
         if(matcher.matches()) {
-            processCommand(matcher, list);
+            processCommand(matcher, list, text);
         }
         return list;
     }
 
-    static List<ColorRange> processSplitCommand(JTextPane auxiliaryPane, String text, Pattern pattern, Matcher matcher) {
+    static List<ColorRange> processSplitCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
         List<ColorRange> list;
-        list = processFindCommand(matcher);
+        list = processFindCommand(matcher, text);
         String[] split = pattern.split(text);
         String splitString = String.join("\n", split);
         auxiliaryPane.setText(splitString);
         return list;
     }
 
-    static List<ColorRange> processReplaceAllCommand(JTextPane auxiliaryPanel, JTextPane replacementPane, Matcher matcher) {
-        List<ColorRange> list;
-        list = processFindCommand(matcher);
+    static List<ColorRange> processReplaceAllCommand(Matcher matcher, String text, JTextPane auxiliaryPanel, JTextPane replacementPane) {
+        List<ColorRange> list = processFindCommand(matcher, text);
         SwingUtilities.invokeLater(() -> {
             try {
                 String replacement = replacementPane.getText();
@@ -128,13 +130,18 @@ public class Calculator {
      * Used by all of the find, match, etc radios, calculates the next range in the matcher, and adds it to the supplied list
      * @param matcher
      * @param list
+     * @param text the target string
      */
-    private static void processCommand(Matcher matcher, List<ColorRange> list) {
+    private static void processCommand(Matcher matcher, List<ColorRange> list, String text) {
         int start = matcher.start();
         int end = matcher.end();
-        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start, end-1, true);
+        // count the new lines between 0 and start, and subtract those from start
+        String substring = text.substring(0, start);
+        int linecount = Utils.countLines(substring);
+        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start-linecount, end-linecount-1, true);
         list.add(range);
     }
+
 
     /**
      * Returns a list of all ranges from the character pane that match the group indexed.
@@ -149,12 +156,7 @@ public class Calculator {
         List<ColorRange> list = new ArrayList<>();
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
-        while(matcher.find()) {
-            int start = matcher.start(groupIndex);
-            int end = matcher.end(groupIndex) - 1;
-            ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
-            list.add(range);
-        }
+        extractRange(matcher, list, matcher.start(groupIndex), matcher.end(groupIndex));
         return list;
     }
 
@@ -173,20 +175,23 @@ public class Calculator {
         Matcher matcher = pattern.matcher(characterPane.getText());
 
         // do the finds first, then the groups, so that the group highlighting will overlay the find highlights
-        List<ColorRange> list = Calculator.processFindCommand(matcher);
+        List<ColorRange> list = Calculator.processFindCommand(matcher, characterPane.getText());
         matcher = pattern.matcher(characterPane.getText());
 
         try {
-            while(matcher.find()) {
-                int start = matcher.start(groupName);
-                int end = matcher.end(groupName) - 1;
-                ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
-                list.add(range);
-            }
+            extractRange(matcher, list, matcher.start(groupName), matcher.end(groupName));
         } catch (Exception e) {
             System.out.println(e);
         }
         return list;
+    }
+
+    private static void extractRange(Matcher matcher, List<ColorRange> list, int start, int end) {
+        while(matcher.find()) {
+            end--;
+            ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
+            list.add(range);
+        }
     }
 
     /**

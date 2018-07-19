@@ -6,6 +6,7 @@ import com.vgrazi.regextester.component.Constants;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -106,7 +107,11 @@ public class Calculator {
         List<ColorRange> list;
         list = processFindCommand(matcher, text);
         String[] split = pattern.split(text);
-        String splitString = String.join("\n", split);
+        String splitString = "";
+        if(!"".equals(text)) {
+            System.out.println(Arrays.asList(split));
+            splitString = ">" + String.join("\n>", split);
+        }
         auxiliaryPane.setText(splitString);
         return list;
     }
@@ -141,7 +146,13 @@ public class Calculator {
         // count the new lines between 0 and start, and subtract those from start
         String substring = text.substring(0, start);
         int linecount = Utils.countLines(substring);
-        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start-linecount, end-linecount-1, true);
+        //dotall needs some adjusting, e.g. .x where x is the first character on the next line
+        int end1 = end - linecount - 1;
+        int start1 = start - linecount;
+        if(substring.length() > 0 && substring.substring(substring.length() - 1).equals("\r") && end1 > start1) {
+            end1--;
+        }
+        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start1, end1, true);
         list.add(range);
     }
 
@@ -184,7 +195,7 @@ public class Calculator {
         try {
             extractRange(matcher, list, matcher.start(groupName), matcher.end(groupName));
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Calculator.calculateMatchingGroup "+e);
         }
         return list;
     }

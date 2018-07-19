@@ -189,6 +189,7 @@ public class RegexTester {
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
+            System.out.println("RegexTester.renderCharacterPane "+e);
             patternPane.setBorder(Constants.RED_BORDER);
 
         }

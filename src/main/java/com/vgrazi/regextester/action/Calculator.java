@@ -144,15 +144,10 @@ public class Calculator {
         int start = matcher.start();
         int end = matcher.end();
         // count the new lines between 0 and start, and subtract those from start
-        String substring = text.substring(0, start);
-        int linecount = Utils.countLines(substring);
-        //dotall needs some adjusting, e.g. .x where x is the first character on the next line
-        int end1 = end - linecount - 1;
-        int start1 = start - linecount;
-        if(substring.length() > 0 && substring.substring(substring.length() - 1).equals("\r") && end1 > start1) {
-            end1--;
-        }
-        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start1, end1, true);
+        int startlinecount = Utils.countLines(text.substring(0, start));
+        // start and end could be on different lines, so we need a separate count for end
+        int endlinecount = Utils.countLines(text.substring(0, end));
+        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start - startlinecount, end - endlinecount - 1, true);
         list.add(range);
     }
 

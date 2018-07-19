@@ -74,6 +74,10 @@ public class Renderer {
         replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
+        if(text.indexOf("\r\n") > 0) {
+            text = text.replaceAll("\r\n", "\r");
+            characterPane.setText(text);
+        }
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(text);
         if(!actionCommand.equals(previousCommand)) {

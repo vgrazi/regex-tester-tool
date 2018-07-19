@@ -87,6 +87,7 @@ public class PatternPane extends JTextPane {
                         try {
                             Renderer.renderMatchingGroupsHighlightsInCharacterPane(characterPane, finalGroupIndex + 1, getText(), flags);
                         } catch (PatternSyntaxException e) {
+                            Renderer.resetColor(getStyledDocument());
                             setBorder(RED_BORDER);
                             System.out.println("PatternPane.renderMatchingGroupsInCharacterPane " + e);
                         }

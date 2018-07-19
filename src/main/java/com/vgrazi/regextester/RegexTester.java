@@ -190,6 +190,8 @@ public class RegexTester {
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             System.out.println("RegexTester.renderCharacterPane "+e);
+            Renderer.resetColor(characterPane.getStyledDocument());
+
             patternPane.setBorder(Constants.RED_BORDER);
 
         }

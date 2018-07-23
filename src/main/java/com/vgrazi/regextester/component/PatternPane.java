@@ -87,7 +87,9 @@ public class PatternPane extends JTextPane {
                         try {
                             Renderer.renderMatchingGroupsHighlightsInCharacterPane(characterPane, finalGroupIndex + 1, getText(), flags);
                         } catch (PatternSyntaxException e) {
+                            Renderer.resetColor(getStyledDocument());
                             setBorder(RED_BORDER);
+                            System.out.println("PatternPane.renderMatchingGroupsInCharacterPane " + e);
                         }
                     };
                     SwingUtilities.invokeLater(runnable);
@@ -123,6 +125,7 @@ public class PatternPane extends JTextPane {
             }
 
         } catch (Exception e) {
+            System.out.println("PatternPane.extractNamedGroups "+e);
             // swallow the error, this is not yet ready to compile
         }
         return list;

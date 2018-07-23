@@ -6,6 +6,7 @@ import com.vgrazi.regextester.component.Constants;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -178,12 +179,30 @@ public class Calculator {
         List<ColorRange> list = Calculator.processFindCommand(matcher, characterPane.getText());
         matcher = pattern.matcher(characterPane.getText());
 
+        extractRangeByNamedGroup(groupName, matcher, list);
+        return list;
+    }
+
+    private static void extractRangeByGroupIndexed(int groupIndex, List<ColorRange> list, Matcher matcher) {
+        while(matcher.find()) {
+            int start = matcher.start(groupIndex);
+            int end = matcher.end(groupIndex) - 1;
+            ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
+            list.add(range);
+        }
+    }
+
+    private static void extractRangeByNamedGroup(String groupName, Matcher matcher, List<ColorRange> list) {
         try {
-            extractRange(matcher, list, matcher.start(groupName), matcher.end(groupName));
+            while(matcher.find()) {
+                int start = matcher.start(groupName);
+                int end = matcher.end(groupName) - 1;
+                ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
+                list.add(range);
+            }
         } catch (Exception e) {
             System.out.println(e);
         }
-        return list;
     }
 
     private static void extractRange(Matcher matcher, List<ColorRange> list, int start, int end) {

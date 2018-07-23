@@ -1,6 +1,8 @@
-package com.vgrazi.regextester.component;
+package com.vgrazi.regextester;
 
 import com.vgrazi.regextester.action.Renderer;
+import com.vgrazi.regextester.component.Constants;
+import com.vgrazi.regextester.component.PatternPane;
 
 import javax.swing.*;
 import java.awt.*;
@@ -71,8 +73,7 @@ public class RegexTester {
         patternPane.addKeyListener(keyListener);
         replacementPane.addKeyListener(new KeyAdapter() {
             @Override
-            //todo: can we replace this with keyTyped???
-            public void keyReleased(KeyEvent e) {
+            public void keyTyped(KeyEvent e) {
                 Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             }
         });
@@ -188,6 +189,9 @@ public class RegexTester {
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
+            System.out.println("RegexTester.renderCharacterPane "+e);
+            Renderer.resetColor(characterPane.getStyledDocument());
+
             patternPane.setBorder(Constants.RED_BORDER);
 
         }

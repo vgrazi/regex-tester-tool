@@ -187,9 +187,20 @@ public class Calculator {
         while(matcher.find()) {
             int start = matcher.start(groupIndex);
             int end = matcher.end(groupIndex) - 1;
-            ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
-            list.add(range);
+            addInclusiveRangeToList(list, start, end);
         }
+    }
+
+    /**
+     * Helper method, mostly because IntelliJ was confusingly reporting these
+     * methods as code duplicates, even though only these two calls were
+     * @param list
+     * @param start
+     * @param end
+     */
+    private static void addInclusiveRangeToList(List<ColorRange> list, int start, int end) {
+        ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
+        list.add(range);
     }
 
     private static void extractRangeByNamedGroup(String groupName, Matcher matcher, List<ColorRange> list) {
@@ -197,8 +208,7 @@ public class Calculator {
             while(matcher.find()) {
                 int start = matcher.start(groupName);
                 int end = matcher.end(groupName) - 1;
-                ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
-                list.add(range);
+                addInclusiveRangeToList(list, start, end);
             }
         } catch (Exception e) {
             System.out.println(e);

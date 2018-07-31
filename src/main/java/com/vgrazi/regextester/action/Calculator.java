@@ -223,14 +223,6 @@ public class Calculator {
         }
     }
 
-    private static void extractRange(Matcher matcher, List<ColorRange> list, int start, int end) {
-        while(matcher.find()) {
-            end--;
-            ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);
-            list.add(range);
-        }
-    }
-
     /**
      * checks that the character at the supplied index is not escaped
      */

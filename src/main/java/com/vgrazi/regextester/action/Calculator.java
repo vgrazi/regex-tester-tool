@@ -24,10 +24,10 @@ public class Calculator {
     /**
      * Returns a list of ColorRanges of all capture groups in the supplied regex. These are in order,
      * beginning with capture group 1 in position 0 of the array
-     * @param regex
-     * @param color
-     * @return
-     * @throws UnmatchedLeftParenException
+     * @param regex the regex pattern
+     * @param color the color to render
+     * @return the color range for rendering the error
+     * @throws UnmatchedLeftParenException if no matching right paren
      */
     public static ColorRange[] parseGroupRanges(String regex, Color color) throws UnmatchedLeftParenException
     {
@@ -55,7 +55,7 @@ public class Calculator {
                 }
             }
         }
-        // find all left and right parens and return as 1 character ranges
+        // find all left and right parentheses and return as 1 character ranges
         ColorRange[] ranges = new ColorRange[list.size()];
         list.toArray(ranges);
         return ranges;
@@ -63,9 +63,9 @@ public class Calculator {
 
     /**
      * Give that the user selected the Find radio, calculates the highlight ranges for all matches
-     * @param matcher
+     * @param matcher the matcher matching the text and regex
      * @param text the target string
-     * @return
+     * @return the color ranges containing the matching segments
      */
     static List<ColorRange> processFindCommand(Matcher matcher, String text) {
         List<ColorRange> list = new ArrayList<>();
@@ -77,9 +77,9 @@ public class Calculator {
 
     /**
      * Give that the user selected the Looking at radio, calculates the highlight range, if any
-     * @param matcher
+     * @param matcher the matcher matching the text and regex
      * @param text the target string
-     * @return
+     * @return the color ranges containing the matching segments
      */
     static List<ColorRange> processLookingAtCommand(Matcher matcher, String text) {
         List<ColorRange> list = new ArrayList<>();
@@ -91,9 +91,9 @@ public class Calculator {
 
     /**
      * Give that the user selected the Matches radio, calculates the highlight ranges for the match, if any
-     * @param matcher
+     * @param matcher the matcher matching the text and regex
      * @param text the target string
-     * @return
+     * @return the color ranges containing the matching segments
      */
     static List<ColorRange> processMatchesCommand(Matcher matcher, String text) {
         List<ColorRange> list = new ArrayList<>();
@@ -123,7 +123,25 @@ public class Calculator {
                 String replacement = replacementPane.getText();
                 String replaced = matcher.replaceAll(replacement);
                 if(!replaced.equals("")) {
-                    replaced = ">" + replaced.replaceAll("\n", "\n>");
+                    replaced = replaced.replaceAll("\n", "\n>");
+                }
+                auxiliaryPanel.setText(replaced);
+            } catch (Exception e) {
+                auxiliaryPanel.setText("");
+                replacementPane.setBorder(Constants.RED_BORDER);
+            }
+        });
+        return list;
+    }
+
+    static List<ColorRange> processReplaceFirstCommand(Matcher matcher, String text, JTextPane auxiliaryPanel, JTextPane replacementPane) {
+        List<ColorRange> list = processFindCommand(matcher, text);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                String replacement = replacementPane.getText();
+                String replaced = matcher.replaceFirst(replacement);
+                if(!replaced.equals("")) {
+                    replaced = replaced.replaceAll("\n", "\n>");
                 }
                 auxiliaryPanel.setText(replaced);
             } catch (Exception e) {
@@ -136,32 +154,32 @@ public class Calculator {
 
     /**
      * Used by all of the find, match, etc radios, calculates the next range in the matcher, and adds it to the supplied list
-     * @param matcher
-     * @param list
+     * @param matcher the matcher matching the text and regex
+     * @param list the list of color ranges to render
      * @param text the target string
      */
     private static void processCommand(Matcher matcher, List<ColorRange> list, String text) {
         int start = matcher.start();
         int end = matcher.end();
         // count the new lines between 0 and start, and subtract those from start
-        int startlinecount = Utils.countLines(text.substring(0, start));
+        int startLineCount = Utils.countLines(text.substring(0, start));
         // start and end could be on different lines, so we need a separate count for end
-        int endlinecount = Utils.countLines(text.substring(0, end));
-        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start - startlinecount, end - endlinecount - 1, true);
+        int endLineCount = Utils.countLines(text.substring(0, end));
+        ColorRange range = new ColorRange(HIGHLIGHT_COLOR, start - startLineCount, end - endLineCount - 1, true);
         list.add(range);
     }
 
 
     /**
      * Returns a list of all ranges from the character pane that match the group indexed.
-     * @param characterPane
-     * @param groupIndex
-     * @param regex
-     * @param flags
-     * @return
-     * @throws PatternSyntaxException
+     * @param characterPane contains the target text
+     * @param groupIndex the 1-based index of the highlighted group
+     * @param regex the regex pattern
+     * @param flags the selected flags
+     * @return the color ranges matching the group index
+     * @throws PatternSyntaxException if a regex compilation error
      */
-    public static List<ColorRange> calculateMatchingGroups(JTextPane characterPane, int groupIndex, String regex, int flags) throws PatternSyntaxException {
+    static List<ColorRange> calculateMatchingGroups(JTextPane characterPane, int groupIndex, String regex, int flags) throws PatternSyntaxException {
         List<ColorRange> list = new ArrayList<>();
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
@@ -171,14 +189,14 @@ public class Calculator {
 
     /**
      * Returns a list of all ranges from the character pane that match the group indexed.
-     * @param characterPane
-     * @param groupName
-     * @param regex
-     * @param flags
-     * @return
-     * @throws PatternSyntaxException
+     * @param characterPane contains the target text
+     * @param groupName the name of the named group
+     * @param regex the regex pattern
+     * @param flags the selected flags
+     * @return the list of color ranges matching the named group
+     * @throws PatternSyntaxException if a regex compilation error
      */
-    public static List<ColorRange> calculateMatchingGroup(JTextPane characterPane, String groupName, String regex, int flags) {
+    static List<ColorRange> calculateMatchingGroup(JTextPane characterPane, String groupName, String regex, int flags) {
 
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
@@ -202,9 +220,9 @@ public class Calculator {
     /**
      * Helper method, mostly because IntelliJ was confusingly reporting these
      * methods as code duplicates, even though only these two calls were
-     * @param list
-     * @param start
-     * @param end
+     * @param list the list of color ranges
+     * @param start the start of the range
+     * @param end the end of the range
      */
     private static void addInclusiveRangeToList(List<ColorRange> list, int start, int end) {
         ColorRange range = new ColorRange(GROUP_COLOR, start, end, true);

@@ -165,7 +165,7 @@ public class Calculator {
         List<ColorRange> list = new ArrayList<>();
         Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(characterPane.getText());
-        extractRange(matcher, list, matcher.start(groupIndex), matcher.end(groupIndex));
+        extractRangeByGroupIndexed(groupIndex, list, matcher);
         return list;
     }
 

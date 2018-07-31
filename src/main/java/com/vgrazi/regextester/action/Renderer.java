@@ -23,9 +23,9 @@ public class Renderer {
 
     /**
      * Styles the docs by coloring all of the color ranges. If resetColor is true, first sets the default color
-     * @param doc
-     * @param resetColor
-     * @param colorRanges
+     * @param doc the pane
+     * @param resetColor true to reset the colors before rendering
+     * @param colorRanges the color ranges to apply
      */
     public static void colorize(StyledDocument doc, boolean resetColor, ColorRange... colorRanges) {
         Style font = doc.getStyle("highlights");
@@ -50,10 +50,10 @@ public class Renderer {
 
     /**
      * When the caret has highlighted a group, we want to select the matching groups in the character pane
-     * @param characterPane
-     * @param groupIndex
-     * @param regex
-     * @param flags
+     * @param characterPane the JPanel containing the target text
+     * @param groupIndex the index of the group
+     * @param regex the regex pattern
+     * @param flags the selected flags
      */
     public static void renderMatchingGroupsHighlightsInCharacterPane(JTextPane characterPane, int groupIndex, String regex, int flags) {
         List<ColorRange> list = Calculator.calculateMatchingGroups(characterPane, groupIndex, regex, flags);
@@ -63,14 +63,14 @@ public class Renderer {
 
     /**
      * Renders the character pane, according to the selected radio button
-     * @param characterPane
-     * @param auxiliaryPane
-     * @param replacementPane
-     * @param regex
-     * @param actionCommand
-     * @param flags
+     * @param characterPane the JPanel containing the target text
+     * @param auxiliaryPane the pane where we render splits
+     * @param pattern the compiled Pattern instance
+     * @param replacementPane the JPanel where we render placements
+     * @param regex the pattern regex
+     * @param actionCommand the action command representing the clicked button
      */
-    public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, JTextPane replacementPane, String regex, String actionCommand, int flags) {
+    public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String regex, String actionCommand) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
@@ -78,7 +78,6 @@ public class Renderer {
             text = text.replaceAll("\r\n", "\r");
             characterPane.setText(text);
         }
-        Pattern pattern = Pattern.compile(regex, flags);
         Matcher matcher = pattern.matcher(text);
         if(!actionCommand.equals(previousCommand)) {
             auxiliaryPane.setText("");
@@ -87,8 +86,7 @@ public class Renderer {
         switch(actionCommand) {
             case "find":
 //                extractNamedGroups(regex);
-//                list = Calculator.processFindCommand(matcher, text);
-                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+                list = Calculator.processFindCommand(matcher, text);
                 break;
             case "looking-at":
 //                extractNamedGroups(regex);
@@ -103,10 +101,15 @@ public class Renderer {
 //                auxiliaryPane.doLayout();
                 list = Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
                 break;
-            case "replace":
+            case "replace-all":
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();
                 list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+                break;
+            case "replace-first":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
+                list = Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
                 break;
         }
         ColorRange[] ranges = new ColorRange[list.size()];
@@ -115,11 +118,11 @@ public class Renderer {
 
     /**
      * Highlights all matches in the character pane for the specified group name
-     * @param flags
-     * @param groupName
-     * @param patternPane
-     * @param characterPane
-     * @param auxiliaryPane
+     * @param flags the selected flags
+     * @param groupName the name of the named group
+     * @param patternPane  the JPanel containing the regex pattern
+     * @param characterPane the JPanel containing the target text
+     * @param auxiliaryPane the pane where we render replacements and splits
      */
     public static void renderNamedGroupInCharacterPane(int flags, String groupName, JTextPane patternPane, JTextPane characterPane, JTextPane auxiliaryPane) {
         String regex = patternPane.getText();

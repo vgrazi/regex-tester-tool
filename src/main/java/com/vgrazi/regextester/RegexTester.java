@@ -74,10 +74,10 @@ public class RegexTester {
         replacementPane.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
-                Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
+                Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
             }
         });
-
 
         bottomPane.add(bottomPanel);
         bottomPane.add(auxiliarySplit);
@@ -107,7 +107,8 @@ public class RegexTester {
         JRadioButton matchButton = new JRadioButton("Matches");
         JRadioButton lookingAtButton = new JRadioButton("Looking at");
         JRadioButton splitButton = new JRadioButton("Split");
-        JRadioButton replaceButton = new JRadioButton("Replace");
+        JRadioButton replaceAllButton = new JRadioButton("Replace all");
+        JRadioButton replaceFirstButton = new JRadioButton("Replace first");
         JRadioButton findButton = new JRadioButton("Find");
         findButton.setSelected(true);
 
@@ -115,19 +116,22 @@ public class RegexTester {
         matchButton.setActionCommand("matches");
         lookingAtButton.setActionCommand("looking-at");
         splitButton.setActionCommand("split");
-        replaceButton.setActionCommand("replace");
+        replaceAllButton.setActionCommand("replace-all");
+        replaceFirstButton.setActionCommand("replace-first");
 
         buttonGroup.add(findButton);
         buttonGroup.add(matchButton);
         buttonGroup.add(lookingAtButton);
         buttonGroup.add(splitButton);
-        buttonGroup.add(replaceButton);
+        buttonGroup.add(replaceAllButton);
+        buttonGroup.add(replaceFirstButton);
 
         findButton.setFont(DEFAULT_LABEL_FONT);
         matchButton.setFont(DEFAULT_LABEL_FONT);
         lookingAtButton.setFont(DEFAULT_LABEL_FONT);
         splitButton.setFont(DEFAULT_LABEL_FONT);
-        replaceButton.setFont(DEFAULT_LABEL_FONT);
+        replaceAllButton.setFont(DEFAULT_LABEL_FONT);
+        replaceFirstButton.setFont(DEFAULT_LABEL_FONT);
 
         JPanel buttonPanel = new JPanel();
 
@@ -136,7 +140,8 @@ public class RegexTester {
         buttonPanel.add(matchButton);
         buttonPanel.add(lookingAtButton);
         buttonPanel.add(splitButton);
-//        buttonPanel.add(replaceButton);
+        buttonPanel.add(replaceAllButton);
+        buttonPanel.add(replaceFirstButton);
         buttonPanel.add(Box.createHorizontalGlue());
         JCheckBox caseButton = new JCheckBox("Case Insensitive");
         JCheckBox commentsButton = new JCheckBox("Comments");
@@ -169,7 +174,8 @@ public class RegexTester {
         findButton.addActionListener(actionListener);
         lookingAtButton.addActionListener(actionListener);
         matchButton.addActionListener(actionListener);
-        replaceButton.addActionListener(actionListener);
+        replaceAllButton.addActionListener(actionListener);
+        replaceFirstButton.addActionListener(actionListener);
         splitButton.addActionListener(actionListener);
         return buttonPanel;
     }
@@ -186,7 +192,9 @@ public class RegexTester {
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {
-            Renderer.renderCharacterPane(characterPane, auxiliaryPane, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand(), flags);
+            String regex = patternPane.getText();
+            Pattern pattern = Pattern.compile(regex, flags);
+            Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, regex, buttonGroup.getSelection().getActionCommand());
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             System.out.println("RegexTester.renderCharacterPane "+e);

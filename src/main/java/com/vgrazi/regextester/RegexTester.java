@@ -5,10 +5,10 @@ import com.vgrazi.regextester.component.Constants;
 import com.vgrazi.regextester.component.PatternPane;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.regex.Pattern;
 
 import static com.vgrazi.regextester.component.Constants.DEFAULT_LABEL_FONT;
@@ -53,7 +53,7 @@ public class RegexTester {
         replacementPane.setFont(DEFAULT_PANE_FONT);
         auxiliarySplit.add(replacementPane);
         auxiliarySplit.add(auxiliaryPane);
-        PatternPane patternPane = new PatternPane(characterPane, auxiliaryPane);
+        PatternPane patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
 
         ButtonGroup buttonGroup = new ButtonGroup();
         JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPane, replacementPane, buttonGroup);
@@ -78,6 +78,25 @@ public class RegexTester {
                 Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
             }
         });
+
+        // even though there is a focus listener, we still need a mouse listener, in case the pattern pane already has
+        // focus, when user clicks the mouse
+        patternPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                StyledDocument styledDocument = patternPane.getStyledDocument();
+                try {
+                    Renderer.renderCharacterPane(characterPane, auxiliaryPane,
+                            Pattern.compile(styledDocument.getText(0, styledDocument.getLength())),
+                            replacementPane, characterPane.getText(), buttonGroup.getSelection().getActionCommand());
+                    Renderer.resetColor(patternPane.getStyledDocument());
+                    patternPane.renderMatchingGroupsInCharacterPane();
+                } catch (BadLocationException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+
 
         bottomPane.add(bottomPanel);
         bottomPane.add(auxiliarySplit);
@@ -197,7 +216,7 @@ public class RegexTester {
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, regex, buttonGroup.getSelection().getActionCommand());
             patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
-            System.out.println("RegexTester.renderCharacterPane "+e);
+            System.out.println("RegexTester.renderCharacterPane " + e);
             Renderer.resetColor(characterPane.getStyledDocument());
 
             patternPane.setBorder(Constants.RED_BORDER);

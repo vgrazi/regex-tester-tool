@@ -29,11 +29,11 @@ public class Renderer {
      */
     public static void colorize(StyledDocument doc, boolean resetColor, ColorRange... colorRanges) {
         Style font = doc.getStyle("highlights");
-        if (resetColor) {
+        if (resetColor)
+        {
             StyleConstants.setBackground(font, BACKGROUND_COLOR);
             doc.setCharacterAttributes(0, doc.getLength(), font, true);
         }
-
         Arrays.stream(colorRanges).forEach(colorRange ->
         {
             StyleConstants.setBackground(font, colorRange.getColor());
@@ -86,7 +86,8 @@ public class Renderer {
         switch(actionCommand) {
             case "find":
 //                extractNamedGroups(regex);
-                list = Calculator.processFindCommand(matcher, text);
+                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+//                list = Calculator.processFindCommand(matcher, text);
                 break;
             case "looking-at":
 //                extractNamedGroups(regex);

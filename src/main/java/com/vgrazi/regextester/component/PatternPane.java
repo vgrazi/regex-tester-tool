@@ -28,7 +28,7 @@ public class PatternPane extends JTextPane {
     private JTextPane auxiliaryPane;
     private int flags;
 
-    public PatternPane(final JTextPane characterPane, final JTextPane auxiliaryPane) {
+    public PatternPane(final JTextPane characterPane, final JTextPane auxiliaryPane, JTextPane replacementPane) {
         this.characterPane = characterPane;
         this.auxiliaryPane = auxiliaryPane;
         getStyledDocument().addStyle("highlights", null);
@@ -42,19 +42,8 @@ public class PatternPane extends JTextPane {
                 });
         addFocusListener(new FocusAdapter() {
             @Override
-            public void focusGained(FocusEvent e) {
-                renderMatchingGroupsInCharacterPane();
-            }
-
-            @Override
             public void focusLost(FocusEvent e) {
                 Renderer.resetColor(getStyledDocument());
-            }
-        });
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                renderMatchingGroupsInCharacterPane();
             }
         });
     }
@@ -62,7 +51,7 @@ public class PatternPane extends JTextPane {
     /**
      * Renders the matching groups, if any, in the character pane with additional highlighting
      */
-    private void renderMatchingGroupsInCharacterPane() {
+    public void renderMatchingGroupsInCharacterPane() {
         String text = getText();
         Renderer.resetColor(getStyledDocument());
         try {
@@ -88,8 +77,12 @@ public class PatternPane extends JTextPane {
                             Renderer.renderMatchingGroupsHighlightsInCharacterPane(characterPane, finalGroupIndex + 1, getText(), flags);
                         } catch (PatternSyntaxException e) {
                             Renderer.resetColor(getStyledDocument());
+                            System.out.printf("Error index:%d%n", e.getIndex());
+                            ColorRange errorRange = new ColorRange(Color.red, e.getIndex() -1, e.getIndex() + 1);
+                            Renderer.colorize(getStyledDocument(), true, errorRange);
+
                             setBorder(RED_BORDER);
-                            System.out.println("PatternPane.renderMatchingGroupsInCharacterPane " + e);
+                            System.out.println("PatternPane.renderMatchingGroupsInCharacterPane " + e + " index:" + e.getIndex());
                         }
                     };
                     SwingUtilities.invokeLater(runnable);
@@ -97,7 +90,7 @@ public class PatternPane extends JTextPane {
                 }
             }
         } catch (UnmatchedLeftParenException e1) {
-            ColorRange range = new ColorRange(Color.red, e1.getPosition(), text.length() - 1);
+            ColorRange range = new ColorRange(Color.red, e1.getPosition(), e1.getPosition()+1);
             Renderer.colorize(getStyledDocument(), true, range);
         }
     }

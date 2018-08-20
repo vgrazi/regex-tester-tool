@@ -63,7 +63,9 @@ public class PatternPane extends JTextPane {
 //            names.forEach(name->addRadioButton(name, buttonGroup, auxiliaryPane));
 //            auxiliaryPane.doLayout();
 
-            ColorRange[] colorRanges = Calculator.parseGroupRanges(text, GROUP_COLOR);
+            String replaced = text.replaceAll("\\((\\?(.*?))\\)", "-$1-");
+
+            ColorRange[] colorRanges = Calculator.parseGroupRanges(replaced, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
             int position = getCaretPosition();
             for (int groupIndex = 0; groupIndex < colorRanges.length; groupIndex++) {
@@ -77,9 +79,10 @@ public class PatternPane extends JTextPane {
                             Renderer.renderMatchingGroupsHighlightsInCharacterPane(characterPane, finalGroupIndex + 1, getText(), flags);
                         } catch (PatternSyntaxException e) {
                             Renderer.resetColor(getStyledDocument());
-                            System.out.printf("Error index:%d%n", e.getIndex());
-                            ColorRange errorRange = new ColorRange(Color.red, e.getIndex() -1, e.getIndex() + 1);
-                            Renderer.colorize(getStyledDocument(), true, errorRange);
+                            // todo: work on error index
+//                            System.out.printf("Error index:%d%n", e.getIndex());
+//                            ColorRange errorRange = new ColorRange(Color.red, e.getIndex() -1, e.getIndex() + 1);
+//                            Renderer.colorize(getStyledDocument(), true, errorRange);
 
                             setBorder(RED_BORDER);
                             System.out.println("PatternPane.renderMatchingGroupsInCharacterPane " + e + " index:" + e.getIndex());

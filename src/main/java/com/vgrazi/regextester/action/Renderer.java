@@ -86,8 +86,9 @@ public class Renderer {
         switch(actionCommand) {
             case "find":
 //                extractNamedGroups(regex);
-                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+//                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
 //                list = Calculator.processFindCommand(matcher, text);
+                list = Calculator.processFinderCommand(matcher, text, auxiliaryPane);
                 break;
             case "looking-at":
 //                extractNamedGroups(regex);

@@ -65,6 +65,8 @@ public class PatternPane extends JTextPane {
 
             String replaced = text.replaceAll("\\((\\?(.*?))\\)", "-$1-");
 
+            // note: gotcha! Syntax like (?i:hot) is not a capture group, even though it captures "hot". Therefore this
+            // is working correctly, don't treat that like a special case
             ColorRange[] colorRanges = Calculator.parseGroupRanges(replaced, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
             int position = getCaretPosition();

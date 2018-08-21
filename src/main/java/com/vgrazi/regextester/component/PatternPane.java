@@ -27,6 +27,7 @@ public class PatternPane extends JTextPane {
     private JTextPane characterPane;
     private JTextPane auxiliaryPane;
     private int flags;
+    private final static Pattern CAPTURE_GROUP_PATTERN = Pattern.compile("\\((\\?([^<]+?))\\)");
 
     public PatternPane(final JTextPane characterPane, final JTextPane auxiliaryPane, JTextPane replacementPane) {
         this.characterPane = characterPane;
@@ -63,10 +64,12 @@ public class PatternPane extends JTextPane {
 //            names.forEach(name->addRadioButton(name, buttonGroup, auxiliaryPane));
 //            auxiliaryPane.doLayout();
 
-            String replaced = text.replaceAll("\\((\\?(.*?))\\)", "-$1-");
+            Matcher matcher = CAPTURE_GROUP_PATTERN.matcher(text);
+            String replaced = matcher.replaceAll("-$1-");
 
-            // note: gotcha! Syntax like (?i:hot) is not a capture group, even though it captures "hot". Therefore this
-            // is working correctly, don't treat that like a special case
+            // note: gotcha! Syntax like (?i:hot) is not a capture group, even though it captures "hot".
+            // Therefore this is working correctly, don't treat that like a special case
+            // also, a named capture group (?<name>regex) is  a capture group, so we exclude that from the above pattern
             ColorRange[] colorRanges = Calculator.parseGroupRanges(replaced, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
             int position = getCaretPosition();

@@ -9,52 +9,76 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.regex.Pattern;
 
 import static com.vgrazi.regextester.component.Constants.DEFAULT_LABEL_FONT;
 import static com.vgrazi.regextester.component.Constants.DEFAULT_PANE_FONT;
+import static com.vgrazi.regextester.component.Constants.DEFAULT_BUTTON_FONT;
 
 public class RegexTester {
 
     private static int flags;
+    // Create a 16×16 transparent image
+    private static BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+    // Create a new blank cursor
+    private static Cursor blankCursor = Toolkit.getDefaultToolkit()
+            .createCustomCursor(cursorImg, new Point(0, 0), "blank cursor");
+
 
     public void launch() {
-        JFrame frame = new JFrame("Regex Test Tool");
+        JFrame frame = new JFrame("Regex Tester Tool");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        // Apply it to the frame (or any component)
+        frame.getContentPane().setCursor(blankCursor);
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setCursor(blankCursor);
         splitPane.setDividerLocation(50);
 
         JPanel topPanel = new JPanel();
+        topPanel.setCursor(blankCursor);
+
         topPanel.setLayout(new BorderLayout());
 
         JLabel patternJlabel = new JLabel("Pattern  ");
+        patternJlabel.setCursor(blankCursor);
         patternJlabel.setVerticalAlignment(SwingConstants.TOP);
         patternJlabel.setBackground(Color.LIGHT_GRAY);
         patternJlabel.setFont(DEFAULT_LABEL_FONT);
+        patternJlabel.setCursor(blankCursor);
+
         topPanel.add(patternJlabel, BorderLayout.WEST);
 
         splitPane.add(topPanel);
 
         JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(.8d);
+        bottomPane.setCursor(blankCursor);
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
+        bottomPanel.setCursor(blankCursor);
         JTextPane characterPane = new JTextPane();
+        characterPane.setCursor(blankCursor);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
         JSplitPane auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        auxiliarySplit.setCursor(blankCursor);
         auxiliarySplit.setDividerLocation(40);
         JTextPane auxiliaryPane = new JTextPane();
+        auxiliaryPane.setCursor(blankCursor);
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
 
         JTextPane replacementPane = new JTextPane();
+        replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
         auxiliarySplit.add(replacementPane);
         auxiliarySplit.add(auxiliaryPane);
         PatternPane patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
-
+        patternPane.setCursor(blankCursor);
         ButtonGroup buttonGroup = new ButtonGroup();
         JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPane, replacementPane, buttonGroup);
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
@@ -145,14 +169,15 @@ public class RegexTester {
         buttonGroup.add(replaceAllButton);
         buttonGroup.add(replaceFirstButton);
 
-        findButton.setFont(DEFAULT_LABEL_FONT);
-        matchButton.setFont(DEFAULT_LABEL_FONT);
-        lookingAtButton.setFont(DEFAULT_LABEL_FONT);
-        splitButton.setFont(DEFAULT_LABEL_FONT);
-        replaceAllButton.setFont(DEFAULT_LABEL_FONT);
-        replaceFirstButton.setFont(DEFAULT_LABEL_FONT);
+        findButton.setFont(DEFAULT_BUTTON_FONT);
+        matchButton.setFont(DEFAULT_BUTTON_FONT);
+        lookingAtButton.setFont(DEFAULT_BUTTON_FONT);
+        splitButton.setFont(DEFAULT_BUTTON_FONT);
+        replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
+        replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setCursor(blankCursor);
 
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.add(findButton);
@@ -173,11 +198,11 @@ public class RegexTester {
         buttonPanel.add(literalButton);
         buttonPanel.add(multilineButton);
 
-        caseButton.setFont(DEFAULT_LABEL_FONT);
-        commentsButton.setFont(DEFAULT_LABEL_FONT);
-        dotallButton.setFont(DEFAULT_LABEL_FONT);
-        literalButton.setFont(DEFAULT_LABEL_FONT);
-        multilineButton.setFont(DEFAULT_LABEL_FONT);
+        caseButton.setFont(DEFAULT_BUTTON_FONT);
+        commentsButton.setFont(DEFAULT_BUTTON_FONT);
+        dotallButton.setFont(DEFAULT_BUTTON_FONT);
+        literalButton.setFont(DEFAULT_BUTTON_FONT);
+        multilineButton.setFont(DEFAULT_BUTTON_FONT);
 
         ActionListener recalcFlagListener = e -> {
             flags = recalculateFlags(caseButton, commentsButton, dotallButton, literalButton, multilineButton);

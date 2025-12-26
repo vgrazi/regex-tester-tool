@@ -29,7 +29,7 @@ public class RegexTester {
             .createCustomCursor(cursorImg, new Point(0, 0), "blank cursor");
 
     // Flag to track cursor visibility
-    private static boolean cursorVisible = false;
+    private static boolean cursorVisible = true;
 
     // Method to toggle cursor visibility
     private static void toggleCursorVisibility(Component component) {
@@ -134,7 +134,7 @@ public class RegexTester {
         });
 
         // Apply it to the frame (or any component)
-        frame.getContentPane().setCursor(blankCursor);
+        frame.getContentPane().setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         // Install UI so we can modify the divider
         splitPane.setUI(new BasicSplitPaneUI() {
@@ -144,7 +144,8 @@ public class RegexTester {
                     @Override
                     public void setCursor(Cursor cursor) {
                         // Force the divider to always use the blank cursor
-                        super.setCursor(blankCursor);
+                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+                        super.setCursor(cursorToSet);
                     }
                 };
             }
@@ -177,7 +178,8 @@ public class RegexTester {
                     @Override
                     public void setCursor(Cursor cursor) {
                         // Force the divider to always use the blank cursor
-                        super.setCursor(blankCursor);
+                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+                        super.setCursor(cursorToSet);
                     }
                 };
             }
@@ -202,7 +204,8 @@ public class RegexTester {
                     @Override
                     public void setCursor(Cursor cursor) {
                         // Force the divider to always use the blank cursor
-                        super.setCursor(blankCursor);
+                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+                        super.setCursor(cursorToSet);
                     }
                 };
             }
@@ -275,6 +278,8 @@ public class RegexTester {
 
         frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
+
+        setCursorRecursively(frame.getContentPane(), cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
     }
 
     private static void formatPatternPane(PatternPane patternPane) {

@@ -83,37 +83,33 @@ public class Renderer {
             auxiliaryPane.setText("");
             previousCommand = actionCommand;
         }
-        switch(actionCommand) {
-            case "find":
+        list = switch (actionCommand) {
+            case "find" ->
 //                extractNamedGroups(regex);
 //                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
 //                list = Calculator.processFindCommand(matcher, text);
-                list = Calculator.processFinderCommand(matcher, text, auxiliaryPane);
-                break;
-            case "looking-at":
+                    Calculator.processFinderCommand(matcher, text, auxiliaryPane);
+            case "looking-at" ->
 //                extractNamedGroups(regex);
-                list = Calculator.processLookingAtCommand(matcher, text);
-                break;
-            case "matches":
+                    Calculator.processLookingAtCommand(matcher, text);
+            case "matches" -> {
                 extractNamedGroups(regex);
-                list = Calculator.processMatchesCommand(matcher, text);
-                break;
-            case "split":
+                yield Calculator.processMatchesCommand(matcher, text, auxiliaryPane);
+            }
+            case "split" ->
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();
-                list = Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
-                break;
-            case "replace-all":
+                    Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
+            case "replace-all" ->
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();
-                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
-                break;
-            case "replace-first":
+                    Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+            case "replace-first" ->
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();
-                list = Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
-                break;
-        }
+                    Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
+            default -> list;
+        };
         ColorRange[] ranges = new ColorRange[list.size()];
         colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
     }

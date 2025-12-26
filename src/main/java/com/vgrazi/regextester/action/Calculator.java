@@ -141,6 +141,25 @@ public class Calculator {
         return list;
     }
 
+    static List<ColorRange> processMatchesCommand(Matcher matcher, String text, JEditorPane auxiliaryPane) {
+        List<ColorRange> list = new ArrayList<>();
+        if (matcher.matches()) {
+            processCommand(matcher, list, text);
+            int count = matcher.groupCount();
+            StringBuilder groupString = new StringBuilder();
+            for (int i = 0; i <= count; i++) {
+                String group = matcher.group(i);
+                if (group != null) {
+                    groupString.append(i).append(". ").append(group).append("\n");
+                }
+            }
+            auxiliaryPane.setText(groupString.toString());
+        } else {
+            auxiliaryPane.setText("");
+        }
+        return list;
+    }
+
     static List<ColorRange> processSplitCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
         List<ColorRange> list;
         list = processFindCommand(matcher, text);

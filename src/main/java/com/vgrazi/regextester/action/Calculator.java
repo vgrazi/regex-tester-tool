@@ -96,7 +96,7 @@ public class Calculator {
             for (int i = 0; i <= count; i++) {
                 String group = matcher.group(i);
                 if (group != null) {
-                    System.out.println(group);
+//                    System.out.println(group);
                     groupString.append(i).append(". ").append(group).append("\n");
                     if (i == count) {
                         groupString.append("\n");

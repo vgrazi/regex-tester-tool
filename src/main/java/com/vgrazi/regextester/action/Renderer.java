@@ -73,6 +73,13 @@ public class Renderer {
     public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String regex, String actionCommand) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
+        
+        // Clear auxiliary pane if pattern is empty
+        if (regex == null || regex.trim().isEmpty()) {
+            auxiliaryPane.setText("");
+            return;
+        }
+        
         String text = characterPane.getText();
         if(text.indexOf("\r\n") > 0) {
             text = text.replaceAll("\r\n", "\r");

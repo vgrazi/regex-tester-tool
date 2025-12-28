@@ -217,8 +217,22 @@ public class RegexTester {
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
 
-        // Create a panel to hold the replacement label and text field
-        JPanel replacementContainer = new JPanel(new BorderLayout());
+        // Create a panel to hold the replacement label and text field with fixed height
+        JPanel replacementContainer = new JPanel(new BorderLayout()) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension size = super.getPreferredSize();
+                size.height = 30; // Fixed height for the replacement panel
+                return size;
+            }
+            
+            @Override
+            public Dimension getMaximumSize() {
+                Dimension size = super.getMaximumSize();
+                size.height = 30; // Fixed maximum height
+                return size;
+            }
+        };
         replacementContainer.setCursor(blankCursor);
         
         // Add label to the left of the replacement text field
@@ -228,7 +242,14 @@ public class RegexTester {
         replacementContainer.add(replacementLabel, BorderLayout.WEST);
         
         // Add the replacement text field to the center of the panel
-        replacementPane = new JTextPane();
+        replacementPane = new JTextPane() {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension size = super.getPreferredSize();
+                size.height = 30; // Fixed height for the text field
+                return size;
+            }
+        };
         replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
         replacementContainer.add(replacementPane, BorderLayout.CENTER);

@@ -72,55 +72,52 @@ public class Renderer {
     public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String regex, String actionCommand) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
-        
+
         // Clear auxiliary pane if pattern is empty
         if (regex == null || regex.trim().isEmpty()) {
             auxiliaryPane.setText("");
+            auxiliaryPane.setBorder(Constants.WHITE_BORDER);
             return;
         }
-        
+
         String text = characterPane.getText();
         if(text.indexOf("\r\n") > 0) {
             text = text.replaceAll("\r\n", "\r");
             characterPane.setText(text);
         }
-        Matcher matcher = pattern.matcher(text);
-        if(!actionCommand.equals(previousCommand)) {
-            auxiliaryPane.setText("");
-            previousCommand = actionCommand;
-        }
-        list = switch (actionCommand) {
-            case "find" ->
-//                extractNamedGroups(regex);
-//                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
-//                list = Calculator.processFindCommand(matcher, text);
-                    Calculator.processFinderCommand(matcher, text, auxiliaryPane);
-            case "looking-at" ->
-//                extractNamedGroups(regex);
-                    Calculator.processLookingAtCommand(matcher, text);
-            case "matches" -> {
-                extractNamedGroups(regex);
-                yield Calculator.processMatchesCommand(matcher, text, auxiliaryPane);
-            }
-            case "split" ->
-//                auxiliaryPane.removeAll();
-//                auxiliaryPane.doLayout();
-                    Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
-            case "replace-all" ->
-//                auxiliaryPane.removeAll();
-//                auxiliaryPane.doLayout();
-                    Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
-            case "replace-first" ->
-//                auxiliaryPane.removeAll();
-//                auxiliaryPane.doLayout();
-                    Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
-            default -> list;
-        };
-        ColorRange[] ranges = new ColorRange[list.size()];
-        colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
-    }
 
-    /**
+        try {
+            // Only proceed if we have a valid pattern
+            Pattern testPattern = Pattern.compile(regex);
+            Matcher matcher = testPattern.matcher(text);
+
+            if(!actionCommand.equals(previousCommand)) {
+                auxiliaryPane.setText("");
+                previousCommand = actionCommand;
+            }
+
+            list = switch (actionCommand) {
+                case "find" -> Calculator.processFinderCommand(matcher, text, auxiliaryPane);
+                case "looking-at" -> Calculator.processLookingAtCommand(matcher, text);
+                case "matches" -> {
+                    extractNamedGroups(regex);
+                    yield Calculator.processMatchesCommand(matcher, text, auxiliaryPane);
+                }
+                case "split" -> Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
+                case "replace-all" -> Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+                case "replace-first" -> Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
+                default -> list;
+            };
+
+            ColorRange[] ranges = new ColorRange[list.size()];
+            colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
+
+        } catch (Exception e) {
+            // If pattern is invalid, clear the auxiliary pane
+            auxiliaryPane.setText("");
+            auxiliaryPane.setBorder(Constants.WHITE_BORDER);
+        }
+    }    /**
      * Highlights all matches in the character pane for the specified group name
      * @param flags the selected flags
      * @param groupName the name of the named group

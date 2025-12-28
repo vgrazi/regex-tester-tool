@@ -195,7 +195,7 @@ public class RegexTester {
         characterPane.setCursor(blankCursor);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
-        JSplitPane auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         // Install UI so we can modify the divider
         auxiliarySplit.setUI(new BasicSplitPaneUI() {
             @Override
@@ -217,10 +217,27 @@ public class RegexTester {
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
 
+        // Create a panel to hold the replacement label and text field
+        JPanel replacementContainer = new JPanel(new BorderLayout());
+        replacementContainer.setCursor(blankCursor);
+        
+        // Add label to the left of the replacement text field
+        replacementLabel = new JLabel("Replacement ");
+        replacementLabel.setFont(DEFAULT_LABEL_FONT);
+        replacementLabel.setCursor(blankCursor);
+        replacementContainer.add(replacementLabel, BorderLayout.WEST);
+        
+        // Add the replacement text field to the center of the panel
         replacementPane = new JTextPane();
         replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
-        auxiliarySplit.add(replacementPane);
+        replacementContainer.add(replacementPane, BorderLayout.CENTER);
+        
+        // Add the container to the split pane
+        auxiliarySplit.add(replacementContainer);
+        
+        // Initially hide the replacement label
+        replacementLabel.setVisible(false);
         auxiliarySplit.add(auxiliaryPane);
         patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
         patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
@@ -274,7 +291,9 @@ public class RegexTester {
         bottomPane.add(auxiliarySplit);
         splitPane.add(bottomPane);
 
-        frame.getContentPane().add(splitPane);
+        // Add title bar and content to frame
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(splitPane, BorderLayout.CENTER);
 
         frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
@@ -379,13 +398,29 @@ public class RegexTester {
         dotallButton.addActionListener(recalcFlagListener);
         literalButton.addActionListener(recalcFlagListener);
         multilineButton.addActionListener(recalcFlagListener);
-        ActionListener actionListener = e -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+        // Create a custom action listener that handles visibility of replacement label
+        ActionListener actionListener = e -> {
+            String command = buttonGroup.getSelection().getActionCommand();
+            // Show replacement label only for replace-all or replace-first
+            boolean showReplacement = command.equals("replace-all") || command.equals("replace-first");
+            replacementLabel.setVisible(showReplacement);
+            
+            // Refresh the layout
+            replacementLabel.revalidate();
+            
+            renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+        };
+        
+        // Add the action listener to all radio buttons
         findButton.addActionListener(actionListener);
         lookingAtButton.addActionListener(actionListener);
         matchButton.addActionListener(actionListener);
         replaceAllButton.addActionListener(actionListener);
         replaceFirstButton.addActionListener(actionListener);
         splitButton.addActionListener(actionListener);
+        
+        // Trigger the action listener to set initial visibility
+        actionListener.actionPerformed(new ActionEvent(buttonGroup.getSelection().getActionCommand(), ActionEvent.ACTION_PERFORMED, ""));
         return buttonPanel;
     }
 
@@ -402,6 +437,8 @@ public class RegexTester {
     private static JTextPane characterPane;
     private static PatternPane patternPane;
     private static JTextPane replacementPane;
+    private static JLabel replacementLabel; // Made this a class field
+    private static JSplitPane auxiliarySplit;
     private static JTextPane auxiliaryPane;
     private static boolean showingHelp = false;
 

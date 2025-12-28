@@ -29,8 +29,7 @@ public class Renderer {
      */
     public static void colorize(StyledDocument doc, boolean resetColor, ColorRange... colorRanges) {
         Style font = doc.getStyle("highlights");
-        if (resetColor)
-        {
+        if (resetColor) {
             StyleConstants.setBackground(font, BACKGROUND_COLOR);
             doc.setCharacterAttributes(0, doc.getLength(), font, true);
         }

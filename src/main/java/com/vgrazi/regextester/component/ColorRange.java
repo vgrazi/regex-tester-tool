@@ -50,23 +50,6 @@ public class ColorRange {
 
     @Override
     public String toString() {
-//        Color color1 = new Color(46,198,246);
-//        Color color2 = new Color(255,255,255);
-//        Color color3 = new Color(170,232, 252);
-//        String colorName;
-//        if(color.equals(color1))
-//        {
-//            colorName = "Dark blue";
-//        }
-//        else if(color.equals(color2))
-//        {
-//            colorName = "white";
-//        }
-//        else if(color.equals(color3))
-//        {
-//            colorName= "Light blue";
-//        }
-//        else colorName = "unknown";
         return String.format("Range: [%d, %d] (%d) %s inclusive=%s", start, getEnd(), getSize(), color, inclusive);
     }
 }

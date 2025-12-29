@@ -161,16 +161,73 @@ public class Calculator {
     }
 
     static List<ColorRange> processSplitCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
-        List<ColorRange> list;
-        list = processFindCommand(matcher, text);
+        List<ColorRange> list = processFindCommand(matcher, text);
         String[] split = pattern.split(text);
-        String splitString = "";
+        StringBuilder sb = new StringBuilder();
+        
         if (!"".equals(text)) {
             System.out.println(Arrays.asList(split));
-            splitString = ">" + String.join("\n>", split);
+            for (int i = 0; i < split.length; i++) {
+                sb.append(i).append(": ").append(split[i]).append("\n");
+            }
         }
-        auxiliaryPane.setText(splitString);
+        
+        auxiliaryPane.setText(sb.toString());
         return list;
+    }
+
+    static List<ColorRange> processSplitCommandWithLimit(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, int limit) {
+        List<ColorRange> list = processFindCommand(matcher, text);
+        String[] split = pattern.split(text, limit);
+        StringBuilder sb = new StringBuilder();
+        
+        if (!"".equals(text)) {
+            System.out.println(Arrays.asList(split));
+            for (int i = 0; i < split.length; i++) {
+                sb.append(i).append(": ").append(split[i]).append("\n");
+            }
+        }
+        
+        auxiliaryPane.setText(sb.toString());
+        return list;
+    }
+
+    static List<ColorRange> processSplitCommandWithDelimiters(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String actionCommand) {
+        List<ColorRange> list = processFindCommand(matcher, text);
+
+        // Get all the delimiters first
+        List<String> delimiters = new ArrayList<>();
+        matcher.reset();
+        while (matcher.find()) {
+            delimiters.add(matcher.group());
+        }
+
+        // Split the text, keeping empty trailing strings
+        String[] parts = pattern.split(text, -1);
+
+        // Build the output string with interleaved parts and delimiters
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+
+        for (int i = 0; i < parts.length; i++) {
+            // Add the current part
+            sb.append(index++).append(": ").append(parts[i]).append("\n");
+
+            // Add the delimiter that follows this part (if any)
+            if (i < delimiters.size()) {
+                sb.append(index++).append(": ").append(delimiters.get(i)).append("\n");
+            }
+        }
+
+        auxiliaryPane.setText(sb.toString());
+        return list;
+    }
+    // Helper method to escape special characters for display
+    private static String escapeSpecialChars(String input) {
+        if (input == null) return "";
+        return input.replace("\n", "\\n")
+                   .replace("\r", "\\r")
+                   .replace("\t", "\\t");
     }
 
     static List<ColorRange> processReplaceAllCommand(Matcher matcher, String text, JTextPane auxiliaryPanel, JTextPane replacementPane) {

@@ -104,6 +104,20 @@ public class Renderer {
                     yield Calculator.processMatchesCommand(matcher, text, auxiliaryPane);
                 }
                 case "split" -> Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
+                case "split-with-limit" -> {
+                    int limit = 0;
+                    try {
+                        String limitText = replacementPane.getText().trim();
+                        if (!limitText.isEmpty()) {
+                            limit = Integer.parseInt(limitText);
+                        }
+                    } catch (NumberFormatException e) {
+                        // If invalid number, use default (0)
+                    }
+                    yield Calculator.processSplitCommandWithLimit(matcher, text, auxiliaryPane, pattern, limit);
+                }
+                case "split-with-delimiters" -> 
+                    Calculator.processSplitCommandWithDelimiters(matcher, text, auxiliaryPane, pattern, replacementPane, actionCommand);
                 case "replace-all" -> Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
                 case "replace-first" -> Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
                 default -> list;

@@ -152,6 +152,8 @@ public class RegexTester {
         });
         splitPane.setCursor(blankCursor);
         splitPane.setDividerLocation(50);
+        splitPane.setResizeWeight(0.0); // Don't resize the top panel
+        splitPane.setContinuousLayout(true); // Enable continuous layout for smoother resizing
 
         JPanel topPanel = new JPanel();
         topPanel.setCursor(blankCursor);
@@ -186,7 +188,8 @@ public class RegexTester {
         });
         bottomPane.setCursor(blankCursor);
         splitPane.setDividerLocation(.8d);
-        bottomPane.setCursor(blankCursor);
+        bottomPane.setResizeWeight(0.5); // Allow both sides to resize equally
+        bottomPane.setContinuousLayout(true); // Enable continuous layout for smoother resizing
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
@@ -212,6 +215,8 @@ public class RegexTester {
         });
         auxiliarySplit.setCursor(blankCursor);
         auxiliarySplit.setDividerLocation(40);
+        auxiliarySplit.setResizeWeight(0.0); // Keep the replacement panel fixed height
+        auxiliarySplit.setContinuousLayout(true); // Enable continuous layout for smoother resizing
         auxiliaryPane = new JTextPane();
         auxiliaryPane.setCursor(blankCursor);
         auxiliaryPane.setEditable(false);
@@ -337,40 +342,54 @@ public class RegexTester {
     }
 
     private static JPanel createButtonPanel(PatternPane patternPane, JTextPane characterPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
+        // Create all radio buttons
+        JRadioButton findButton = new JRadioButton("Find");
         JRadioButton matchButton = new JRadioButton("Matches");
         JRadioButton lookingAtButton = new JRadioButton("Looking at");
         JRadioButton splitButton = new JRadioButton("Split");
+        JRadioButton splitWithLimitButton = new JRadioButton("Split with Limit");
+        JRadioButton splitWithDelimitersButton = new JRadioButton("Split with Delimiters");
         JRadioButton replaceAllButton = new JRadioButton("Replace all");
         JRadioButton replaceFirstButton = new JRadioButton("Replace first");
-        JRadioButton findButton = new JRadioButton("Find");
 
         // Set cursor to default for radio buttons
+        findButton.setCursor(Cursor.getDefaultCursor());
         matchButton.setCursor(Cursor.getDefaultCursor());
         lookingAtButton.setCursor(Cursor.getDefaultCursor());
         splitButton.setCursor(Cursor.getDefaultCursor());
+        splitWithLimitButton.setCursor(Cursor.getDefaultCursor());
+        splitWithDelimitersButton.setCursor(Cursor.getDefaultCursor());
         replaceAllButton.setCursor(Cursor.getDefaultCursor());
         replaceFirstButton.setCursor(Cursor.getDefaultCursor());
-        findButton.setCursor(Cursor.getDefaultCursor());
         findButton.setSelected(true);
 
+        // Set action commands
         findButton.setActionCommand("find");
         matchButton.setActionCommand("matches");
         lookingAtButton.setActionCommand("looking-at");
         splitButton.setActionCommand("split");
+        splitWithLimitButton.setActionCommand("split-with-limit");
+        splitWithDelimitersButton.setActionCommand("split-with-delimiters");
         replaceAllButton.setActionCommand("replace-all");
         replaceFirstButton.setActionCommand("replace-first");
 
+        // Add to button group
         buttonGroup.add(findButton);
         buttonGroup.add(matchButton);
         buttonGroup.add(lookingAtButton);
         buttonGroup.add(splitButton);
+        buttonGroup.add(splitWithLimitButton);
+        buttonGroup.add(splitWithDelimitersButton);
         buttonGroup.add(replaceAllButton);
         buttonGroup.add(replaceFirstButton);
 
+        // Set fonts
         findButton.setFont(DEFAULT_BUTTON_FONT);
         matchButton.setFont(DEFAULT_BUTTON_FONT);
         lookingAtButton.setFont(DEFAULT_BUTTON_FONT);
         splitButton.setFont(DEFAULT_BUTTON_FONT);
+        splitWithLimitButton.setFont(DEFAULT_BUTTON_FONT);
+        splitWithDelimitersButton.setFont(DEFAULT_BUTTON_FONT);
         replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
         replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
@@ -382,6 +401,8 @@ public class RegexTester {
         buttonPanel.add(matchButton);
         buttonPanel.add(lookingAtButton);
         buttonPanel.add(splitButton);
+        buttonPanel.add(splitWithLimitButton);
+        buttonPanel.add(splitWithDelimitersButton);
         buttonPanel.add(replaceAllButton);
         buttonPanel.add(replaceFirstButton);
         buttonPanel.add(Box.createHorizontalGlue());
@@ -439,6 +460,8 @@ public class RegexTester {
         replaceAllButton.addActionListener(actionListener);
         replaceFirstButton.addActionListener(actionListener);
         splitButton.addActionListener(actionListener);
+        splitWithLimitButton.addActionListener(actionListener);
+        splitWithDelimitersButton.addActionListener(actionListener);
         
         // Trigger the action listener to set initial visibility
         actionListener.actionPerformed(new ActionEvent(buttonGroup.getSelection().getActionCommand(), ActionEvent.ACTION_PERFORMED, ""));

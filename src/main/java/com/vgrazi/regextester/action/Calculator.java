@@ -162,38 +162,66 @@ public class Calculator {
 
     static List<ColorRange> processSplitCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
         List<ColorRange> list = processFindCommand(matcher, text);
-        String[] split = pattern.split(text);
         StringBuilder sb = new StringBuilder();
         
         if (!"".equals(text)) {
-            System.out.println(Arrays.asList(split));
-            for (int i = 0; i < split.length; i++) {
-                sb.append(i).append(": ").append(split[i]).append("\n");
+            // Normalize line endings and split the input text into lines
+            // Handles both Windows (\r\n) and Unix (\n) line endings
+            String normalizedText = text.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+            String[] lines = normalizedText.split("\n");
+            
+            System.out.println("Found " + lines.length + " lines in input");
+            
+            // Process each line independently
+            for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+                String line = lines[lineNum];
+                System.out.println("Processing line " + (lineNum + 1) + ": '" + line + "'");
+                String[] split = pattern.split(line);
+                System.out.println(Arrays.asList(split));
+                
+                // Start index at 0 for each line
+                for (int i = 0; i < split.length; i++) {
+                    sb.append(i).append(": ").append(split[i]).append("\n");
+                }
+                // Add an extra newline between different input lines for better readability
+                sb.append("\n");
             }
         }
         
-        auxiliaryPane.setText(sb.toString());
+        auxiliaryPane.setText(sb.toString().trim());
         return list;
     }
 
     static List<ColorRange> processSplitCommandWithLimit(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, int limit) {
         List<ColorRange> list = processFindCommand(matcher, text);
-        
-        // Split the text using the specified limit
-        String[] parts = pattern.split(text, limit);
-        
-        // Build the output string with just the parts (no delimiters)
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < parts.length; i++) {
-            sb.append(i).append(": ").append(parts[i]).append("\n");
+        
+        if (!"".equals(text)) {
+            // Normalize line endings and split the input text into lines
+            String normalizedText = text.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+            String[] lines = normalizedText.split("\n");
+            
+            // Process each line independently
+            for (String line : lines) {
+                // Split the line using the specified limit
+                String[] parts = pattern.split(line, limit);
+                
+                // Add the split parts with indices
+                for (int i = 0; i < parts.length; i++) {
+                    sb.append(i).append(": ").append(parts[i]).append("\n");
+                }
+                // Add an extra newline between different input lines
+                sb.append("\n");
+            }
         }
         
-        auxiliaryPane.setText(sb.toString());
+        auxiliaryPane.setText(sb.toString().trim());
         return list;
     }
 
     static List<ColorRange> processSplitCommandWithDelimiters(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String actionCommand) {
         List<ColorRange> list = processFindCommand(matcher, text);
+        StringBuilder sb = new StringBuilder();
         
         // Get the limit from the replacement pane
         int limit = 0;
@@ -206,32 +234,42 @@ public class Calculator {
             // If invalid number, use default (0)
         }
 
-        // Get all the delimiters first
-        List<String> delimiters = new ArrayList<>();
-        matcher.reset();
-        while (matcher.find()) {
-            delimiters.add(matcher.group());
-        }
-
-        // Split the text using the specified limit
-        String[] parts = pattern.split(text, limit);
-
-        // Build the output string with interleaved parts and delimiters
-        StringBuilder sb = new StringBuilder();
-        int index = 0;
-        int maxParts = limit > 0 ? Math.min(parts.length, limit) : parts.length;
-
-        for (int i = 0; i < maxParts; i++) {
-            // Add the current part
-            sb.append(index++).append(": ").append(parts[i]).append("\n");
-
-            // Add the delimiter that follows this part (if any and within the limit-1 splits)
-            if (i < delimiters.size() && (limit <= 0 || i < limit - 1)) {
-                sb.append(index++).append(": ").append(delimiters.get(i)).append("\n");
+        if (!"".equals(text)) {
+            // Normalize line endings and split the input text into lines
+            String normalizedText = text.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+            String[] lines = normalizedText.split("\n");
+            
+            // Process each line independently
+            for (String line : lines) {
+                // Get all the delimiters for this line
+                Matcher lineMatcher = pattern.matcher(line);
+                List<String> delimiters = new ArrayList<>();
+                while (lineMatcher.find()) {
+                    delimiters.add(lineMatcher.group());
+                }
+                
+                // Split the line using the specified limit
+                String[] parts = pattern.split(line, limit > 0 ? limit : Integer.MAX_VALUE);
+                
+                // Build the output with interleaved parts and delimiters
+                int index = 0;
+                int maxParts = limit > 0 ? Math.min(parts.length, limit) : parts.length;
+                
+                for (int i = 0; i < maxParts; i++) {
+                    // Add the current part
+                    sb.append(index++).append(": ").append(parts[i]).append("\n");
+                    
+                    // Add the delimiter that follows this part (if any and within the limit-1 splits)
+                    if (i < delimiters.size() && (limit <= 0 || i < limit - 1)) {
+                        sb.append(index++).append(": ").append(delimiters.get(i)).append("\n");
+                    }
+                }
+                // Add an extra newline between different input lines
+                sb.append("\n");
             }
         }
-
-        auxiliaryPane.setText(sb.toString());
+        
+        auxiliaryPane.setText(sb.toString().trim());
         return list;
     }
     // Helper method to escape special characters for display

@@ -438,19 +438,25 @@ public class RegexTester {
         replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
         replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
-        JPanel buttonPanel = new JPanel();
+        // Create a panel with FlowLayout that wraps components
+        JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.setCursor(blankCursor);
-
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-        buttonPanel.add(findButton);
-        buttonPanel.add(matchButton);
-        buttonPanel.add(lookingAtButton);
-        buttonPanel.add(splitButton);
-        buttonPanel.add(splitWithLimitButton);
-        buttonPanel.add(splitWithDelimitersButton);
-        buttonPanel.add(replaceAllButton);
-        buttonPanel.add(replaceFirstButton);
-        buttonPanel.add(Box.createHorizontalGlue());
+        
+        // Create a container panel for the radio buttons with wrapping FlowLayout
+        JPanel radioButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 2));
+        radioButtonPanel.setOpaque(false);
+        
+        // Add radio buttons to the panel
+        radioButtonPanel.add(findButton);
+        radioButtonPanel.add(matchButton);
+        radioButtonPanel.add(lookingAtButton);
+        radioButtonPanel.add(splitButton);
+        radioButtonPanel.add(splitWithLimitButton);
+        radioButtonPanel.add(splitWithDelimitersButton);
+        radioButtonPanel.add(replaceAllButton);
+        radioButtonPanel.add(replaceFirstButton);
+        
+        // Create checkboxes
         JCheckBox caseButton = new JCheckBox("Case Insensitive");
         JCheckBox commentsButton = new JCheckBox("Comments");
         JCheckBox dotallButton = new JCheckBox("Dot All");
@@ -463,11 +469,29 @@ public class RegexTester {
         dotallButton.setCursor(Cursor.getDefaultCursor());
         literalButton.setCursor(Cursor.getDefaultCursor());
         multilineButton.setCursor(Cursor.getDefaultCursor());
-        buttonPanel.add(caseButton);
-        buttonPanel.add(commentsButton);
-        buttonPanel.add(dotallButton);
-        buttonPanel.add(literalButton);
-        buttonPanel.add(multilineButton);
+        
+        // Create a panel for checkboxes with wrapping FlowLayout
+        JPanel checkboxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 2));
+        checkboxPanel.setOpaque(false);
+        checkboxPanel.add(caseButton);
+        checkboxPanel.add(commentsButton);
+        checkboxPanel.add(dotallButton);
+        checkboxPanel.add(literalButton);
+        checkboxPanel.add(multilineButton);
+        
+        // Add both panels to the main button panel
+        buttonPanel.add(radioButtonPanel, BorderLayout.NORTH);
+        buttonPanel.add(checkboxPanel, BorderLayout.SOUTH);
+        
+        // Add a component listener to handle resizing
+        buttonPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                // This will force the FlowLayout to recalculate the layout
+                radioButtonPanel.revalidate();
+                checkboxPanel.revalidate();
+            }
+        });
 
         caseButton.setFont(DEFAULT_BUTTON_FONT);
         commentsButton.setFont(DEFAULT_BUTTON_FONT);

@@ -211,7 +211,10 @@ public class RegexTester {
             }
         });
         auxiliarySplit.setCursor(blankCursor);
-        auxiliarySplit.setDividerLocation(40);
+        auxiliarySplit.setDividerSize(8); // Make the divider more visible and easier to grab
+        auxiliarySplit.setContinuousLayout(true); // Enable continuous layout for smoother resizing
+        auxiliarySplit.setResizeWeight(0.8); // Give more initial space to the top component
+        auxiliarySplit.setDividerLocation(0.8); // Set initial divider location as a ratio (80% for top, 20% for bottom)
         auxiliaryPane = new JTextPane();
         auxiliaryPane.setCursor(blankCursor);
         auxiliaryPane.setEditable(false);

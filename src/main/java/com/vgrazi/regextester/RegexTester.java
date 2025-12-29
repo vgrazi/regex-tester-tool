@@ -5,6 +5,8 @@ import com.vgrazi.regextester.component.Constants;
 import com.vgrazi.regextester.component.PatternPane;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.text.BadLocationException;
@@ -222,42 +224,85 @@ public class RegexTester {
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
 
-        // Create a panel to hold the replacement label and text field with fixed height
-        JPanel replacementContainer = new JPanel(new BorderLayout()) {
+        // Create a panel to hold the replacement label and text field with dynamic height
+        JPanel replacementContainer = new JPanel(new BorderLayout(5, 2)) {
             @Override
             public Dimension getPreferredSize() {
+                if (!isVisible()) {
+                    return new Dimension(0, 0);
+                }
                 Dimension size = super.getPreferredSize();
-                size.height = 30; // Fixed height for the replacement panel
+                size.height = 30; // Fixed height for the replacement panel when visible
+                size.width = Integer.MAX_VALUE; // Allow it to expand
                 return size;
             }
             
             @Override
             public Dimension getMaximumSize() {
+                if (!isVisible()) {
+                    return new Dimension(0, 0);
+                }
                 Dimension size = super.getMaximumSize();
-                size.height = 30; // Fixed maximum height
+                size.height = 30; // Fixed maximum height when visible
+                size.width = Integer.MAX_VALUE; // Allow it to expand
                 return size;
             }
         };
+        replacementContainer.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5)); // Add some padding
         replacementContainer.setCursor(blankCursor);
         
         // Add label to the left of the replacement text field
         replacementLabel = new JLabel("Replacement ");
         replacementLabel.setFont(DEFAULT_LABEL_FONT);
         replacementLabel.setCursor(blankCursor);
-        replacementContainer.add(replacementLabel, BorderLayout.WEST);
+        replacementLabel.setVisible(false); // Start hidden
+        
+        // Create a panel for the label and text field
+        JPanel inputPanel = new JPanel(new BorderLayout(5, 0));
+        inputPanel.add(replacementLabel, BorderLayout.WEST);
         
         // Add the replacement text field to the center of the panel
         replacementPane = new JTextPane() {
             @Override
             public Dimension getPreferredSize() {
                 Dimension size = super.getPreferredSize();
-                size.height = 30; // Fixed height for the text field
+                size.height = 26; // Slightly smaller height to fit better
+                size.width = 400; // Wider default width
+                return size;
+            }
+            
+            @Override
+            public Dimension getMinimumSize() {
+                Dimension size = super.getMinimumSize();
+                size.width = 200; // Minimum width to show enough text
+                size.height = 26;
+                return size;
+            }
+            
+            @Override
+            public Dimension getMaximumSize() {
+                Dimension size = super.getMaximumSize();
+                size.height = 26; // Fixed height
                 return size;
             }
         };
+        
+        // Add some padding and make it look better
+        replacementPane.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.GRAY, 1),
+            BorderFactory.createEmptyBorder(2, 5, 2, 5)
+        ));
         replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
-        replacementContainer.add(replacementPane, BorderLayout.CENTER);
+        
+        // Add the text field to the input panel
+        inputPanel.add(replacementPane, BorderLayout.CENTER);
+        
+        // Add the input panel to the container
+        replacementContainer.add(inputPanel, BorderLayout.CENTER);
+        
+        // Add some glue to push everything to the left
+        replacementContainer.add(Box.createHorizontalGlue(), BorderLayout.EAST);
         
         // Add the container to the split pane
         auxiliarySplit.add(replacementContainer);
@@ -443,24 +488,75 @@ public class RegexTester {
         // Create a custom action listener that handles visibility of replacement label
         ActionListener actionListener = e -> {
             String command = buttonGroup.getSelection().getActionCommand();
-            // Show replacement label only for replace-all or replace-first
-            boolean showReplacement = command.equals("replace-all") || command.equals("replace-first");
-            replacementLabel.setVisible(showReplacement);
             
-            // Refresh the layout
-            replacementLabel.revalidate();
+            // Show replacement label for replace operations
+            boolean isReplace = command.equals("replace-all") || command.equals("replace-first");
+            // Show limit label for split operations
+            boolean isSplit = command.startsWith("split-");
+            
+            // Get the replacement container (parent of the label and text field)
+            Container replacementContainer = replacementPane.getParent();
+            
+            if (isReplace) {
+                replacementLabel.setText("Replacement:");
+                replacementLabel.setVisible(true);
+                replacementPane.setVisible(true);
+                replacementContainer.setVisible(true);
+            } else if (isSplit) {
+                replacementLabel.setText("Limit:");
+                replacementLabel.setVisible(true);
+                replacementPane.setVisible(true);
+                replacementContainer.setVisible(true);
+                replacementPane.setText(""); // Clear the replacement pane when switching to split
+            } else {
+                // Hide the entire container for other operations
+                replacementContainer.setVisible(false);
+            }
+
+            // Force the split pane to update its layout
+            auxiliarySplit.resetToPreferredSizes();
+            auxiliarySplit.revalidate();
+            auxiliarySplit.repaint();
             
             renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
         };
-        
-        // Add the action listener to all radio buttons
+        // Add action listeners to all radio buttons
         findButton.addActionListener(actionListener);
-        lookingAtButton.addActionListener(actionListener);
         matchButton.addActionListener(actionListener);
+        lookingAtButton.addActionListener(actionListener);
+        splitButton.addActionListener(actionListener);
+        splitWithLimitButton.addActionListener(actionListener);  // This line was missing
+        splitWithDelimitersButton.addActionListener(actionListener);
         replaceAllButton.addActionListener(actionListener);
         replaceFirstButton.addActionListener(actionListener);
-        splitButton.addActionListener(actionListener);
-        splitWithLimitButton.addActionListener(actionListener);
+        
+        // Add action listeners to radio buttons
+        ActionListener radioButtonListener = e -> {
+            renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+        };
+        findButton.addActionListener(radioButtonListener);
+        matchButton.addActionListener(radioButtonListener);
+        lookingAtButton.addActionListener(radioButtonListener);
+        splitButton.addActionListener(radioButtonListener);
+        splitWithLimitButton.addActionListener(radioButtonListener);
+        splitWithDelimitersButton.addActionListener(radioButtonListener);
+        replaceAllButton.addActionListener(radioButtonListener);
+        replaceFirstButton.addActionListener(radioButtonListener);
+        
+        // Add key listener to replacement pane to update when limit changes
+        replacementPane.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) { update(); }
+            public void removeUpdate(DocumentEvent e) { update(); }
+            public void insertUpdate(DocumentEvent e) { update(); }
+            
+            private void update() {
+                String command = buttonGroup.getSelection().getActionCommand();
+                if (command.equals("split-with-limit") || command.equals("split-with-delimiters")) {
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                }
+            }
+        });
+        
         splitWithDelimitersButton.addActionListener(actionListener);
         
         // Trigger the action listener to set initial visibility

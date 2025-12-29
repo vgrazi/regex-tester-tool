@@ -178,14 +178,14 @@ public class Calculator {
 
     static List<ColorRange> processSplitCommandWithLimit(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, int limit) {
         List<ColorRange> list = processFindCommand(matcher, text);
-        String[] split = pattern.split(text, limit);
-        StringBuilder sb = new StringBuilder();
         
-        if (!"".equals(text)) {
-            System.out.println(Arrays.asList(split));
-            for (int i = 0; i < split.length; i++) {
-                sb.append(i).append(": ").append(split[i]).append("\n");
-            }
+        // Split the text using the specified limit
+        String[] parts = pattern.split(text, limit);
+        
+        // Build the output string with just the parts (no delimiters)
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            sb.append(i).append(": ").append(parts[i]).append("\n");
         }
         
         auxiliaryPane.setText(sb.toString());
@@ -194,6 +194,17 @@ public class Calculator {
 
     static List<ColorRange> processSplitCommandWithDelimiters(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String actionCommand) {
         List<ColorRange> list = processFindCommand(matcher, text);
+        
+        // Get the limit from the replacement pane
+        int limit = 0;
+        try {
+            String limitText = replacementPane.getText().trim();
+            if (!limitText.isEmpty()) {
+                limit = Integer.parseInt(limitText);
+            }
+        } catch (NumberFormatException e) {
+            // If invalid number, use default (0)
+        }
 
         // Get all the delimiters first
         List<String> delimiters = new ArrayList<>();
@@ -202,19 +213,20 @@ public class Calculator {
             delimiters.add(matcher.group());
         }
 
-        // Split the text, keeping empty trailing strings
-        String[] parts = pattern.split(text, -1);
+        // Split the text using the specified limit
+        String[] parts = pattern.split(text, limit);
 
         // Build the output string with interleaved parts and delimiters
         StringBuilder sb = new StringBuilder();
         int index = 0;
+        int maxParts = limit > 0 ? Math.min(parts.length, limit) : parts.length;
 
-        for (int i = 0; i < parts.length; i++) {
+        for (int i = 0; i < maxParts; i++) {
             // Add the current part
             sb.append(index++).append(": ").append(parts[i]).append("\n");
 
-            // Add the delimiter that follows this part (if any)
-            if (i < delimiters.size()) {
+            // Add the delimiter that follows this part (if any and within the limit-1 splits)
+            if (i < delimiters.size() && (limit <= 0 || i < limit - 1)) {
                 sb.append(index++).append(": ").append(delimiters.get(i)).append("\n");
             }
         }

@@ -110,6 +110,19 @@ public class RegexTester {
 
         // F10 - Toggle help
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0), "showHelp");
+        // F5 - Clear auxiliary pane
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "clearAuxiliary");
+// F5 - Clear all input
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "clearAll");
+        actionMap.put("clearAll", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                patternPane.setText("");
+                characterPane.setText("");
+                auxiliaryPane.setText("");
+                replacementPane.setText("");
+            }
+        });;
         ButtonGroup buttonGroup = new ButtonGroup();
 
         actionMap.put("showHelp", new AbstractAction() {

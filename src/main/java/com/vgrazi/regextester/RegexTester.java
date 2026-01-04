@@ -54,7 +54,14 @@ public class RegexTester {
     public void launch() {
         JFrame frame = new JFrame("Regex Tester Tool");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+// Set a slower cursor blink rate (in milliseconds)
+        int blinkRate = 1000; // Default is usually 500ms, we're making it slightly slower
 
+// Apply to all text components
+        UIManager.put("TextArea.caretBlinkRate", blinkRate);
+        UIManager.put("TextField.caretBlinkRate", blinkRate);
+        UIManager.put("TextPane.caretBlinkRate", blinkRate);
+        UIManager.put("EditorPane.caretBlinkRate", blinkRate);
         // Add F1 and F2 key bindings to switch focus
         InputMap inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = frame.getRootPane().getActionMap();
@@ -110,10 +117,8 @@ public class RegexTester {
 
         // F10 - Toggle help
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0), "showHelp");
-        // F5 - Clear auxiliary pane
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "clearAuxiliary");
 // F5 - Clear all input
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "clearAll");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), "clearAll");
         actionMap.put("clearAll", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -391,6 +396,7 @@ public class RegexTester {
         patternPane.setBackground(Constants.BACKGROUND_COLOR);
     }
 
+
     private static void formatCharacterPane(JTextPane characterPane) {
         characterPane.setForeground(Constants.FONT_COLOR);
         characterPane.setBackground(Constants.BACKGROUND_COLOR);
@@ -568,9 +574,7 @@ public class RegexTester {
         replaceFirstButton.addActionListener(actionListener);
         
         // Add action listeners to radio buttons
-        ActionListener radioButtonListener = e -> {
-            renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
-        };
+        ActionListener radioButtonListener = e -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
         findButton.addActionListener(radioButtonListener);
         matchButton.addActionListener(radioButtonListener);
         lookingAtButton.addActionListener(radioButtonListener);

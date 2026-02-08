@@ -19,6 +19,7 @@ import static com.vgrazi.regextester.component.Constants.DEFAULT_PANE_FONT;
 import static com.vgrazi.regextester.component.Constants.DEFAULT_BUTTON_FONT;
 
 public class RegexTester {
+    private final static JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
     private static int flags;
     // Create a 16×16 transparent image
@@ -135,7 +136,6 @@ public class RegexTester {
 
         // Apply it to the frame (or any component)
         frame.getContentPane().setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         // Install UI so we can modify the divider
         splitPane.setUI(new BasicSplitPaneUI() {
             @Override
@@ -151,7 +151,8 @@ public class RegexTester {
             }
         });
         splitPane.setCursor(blankCursor);
-        splitPane.setDividerLocation(50);
+        splitPane.setResizeWeight(0.2); // Allow pattern pane to be resizable
+        splitPane.setDividerLocation(0.2); // Give pattern pane 20% of height initially
 
         JPanel topPanel = new JPanel();
         topPanel.setCursor(blankCursor);
@@ -198,7 +199,7 @@ public class RegexTester {
         auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         auxiliarySplit.setCursor(blankCursor);
         auxiliarySplit.setDividerLocation(40);
-        JTextPane auxiliaryPane = new JTextPane();
+        auxiliaryPane = new JTextPane();
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
         
@@ -243,6 +244,32 @@ public class RegexTester {
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
 
         formatPatternPane(patternPane);
+
+        // Add document listener to trigger height adjustment when text changes
+        patternPane.getStyledDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+            }
+            
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+            }
+            
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+            }
+        });
+
+        // Add component listener to automatically adjust pattern pane height based on content
+        patternPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                adjustPatternPaneHeight();
+            }
+        });
 
         topPanel.add(patternPane, BorderLayout.CENTER);
 
@@ -484,7 +511,7 @@ public class RegexTester {
         literalButton.setFont(DEFAULT_BUTTON_FONT);
         multilineButton.setFont(DEFAULT_BUTTON_FONT);
 
-        ActionListener recalcFlagListener = e -> {
+        ActionListener recalcFlagListener = _ -> {
             flags = recalculateFlags(caseButton, commentsButton, dotallButton, literalButton, multilineButton);
             renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
             patternPane.setFlags(flags);
@@ -494,7 +521,7 @@ public class RegexTester {
         dotallButton.addActionListener(recalcFlagListener);
         literalButton.addActionListener(recalcFlagListener);
         multilineButton.addActionListener(recalcFlagListener);
-        ActionListener actionListener = e -> {
+        ActionListener actionListener = _ -> {
             if (updatingVisibility) return; // Prevent recursive calls
             updatingVisibility = true;
             try {
@@ -550,6 +577,32 @@ public class RegexTester {
         return flags;
     }
 
+    private static void adjustPatternPaneHeight() {
+        if (adjustingPatternHeight) return; // Prevent recursive calls
+        adjustingPatternHeight = true;
+        try {
+            // Calculate preferred height based on content
+            int preferredHeight = patternPane.getPreferredSize().height;
+            int totalHeight = splitPane.getHeight();
+            
+            if (totalHeight > 0 && preferredHeight > 0) {
+                // Calculate the divider location needed to show all content
+                double neededRatio = (double) preferredHeight / totalHeight;
+                // Clamp between 10% and 80% to prevent extreme sizes
+                double clampedRatio = Math.max(0.1, Math.min(0.8, neededRatio));
+                int neededLocation = (int) (clampedRatio * totalHeight);
+                
+                // Only update if the location is significantly different
+                int currentLocation = (int) splitPane.getDividerLocation();
+                if (Math.abs(currentLocation - neededLocation) > 5) {
+                    splitPane.setDividerLocation(clampedRatio);
+                }
+            }
+        } finally {
+            adjustingPatternHeight = false;
+        }
+    }
+
     private static JTextPane characterPane;
     private static PatternPane patternPane;
     private static JTextPane replacementPane;
@@ -559,6 +612,7 @@ public class RegexTester {
     private static JSplitPane auxiliarySplit;
     private static boolean showingHelp = false;
     private static boolean updatingVisibility = false;
+    private static boolean adjustingPatternHeight = false;
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {

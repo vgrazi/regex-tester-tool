@@ -162,7 +162,8 @@ public class RegexTester {
         JLabel patternJlabel = new JLabel("Pattern  ");
         patternJlabel.setCursor(blankCursor);
         patternJlabel.setVerticalAlignment(SwingConstants.TOP);
-        patternJlabel.setBackground(Color.LIGHT_GRAY);
+        patternJlabel.setBackground(Color.WHITE);
+        patternJlabel.setOpaque(true);
         patternJlabel.setFont(DEFAULT_LABEL_FONT);
         patternJlabel.setCursor(blankCursor);
 
@@ -214,7 +215,8 @@ public class RegexTester {
         replacementLabel = new JLabel("Replacement  ");
         replacementLabel.setCursor(blankCursor);
         replacementLabel.setVerticalAlignment(SwingConstants.TOP);
-        replacementLabel.setBackground(Color.LIGHT_GRAY);
+        replacementLabel.setBackground(Color.WHITE);
+        replacementLabel.setOpaque(true);
         replacementLabel.setFont(DEFAULT_LABEL_FONT);
         replacementPanel.add(replacementLabel, BorderLayout.WEST);
         replacementPanel.add(replacementPane, BorderLayout.CENTER);
@@ -226,9 +228,10 @@ public class RegexTester {
         JLabel auxiliaryLabel = new JLabel("Results  ");
         auxiliaryLabel.setCursor(blankCursor);
         auxiliaryLabel.setVerticalAlignment(SwingConstants.TOP);
-        auxiliaryLabel.setBackground(Color.LIGHT_GRAY);
+        auxiliaryLabel.setBackground(Color.WHITE);
+        auxiliaryLabel.setOpaque(true);
         auxiliaryLabel.setFont(DEFAULT_LABEL_FONT);
-        auxiliaryPanel.add(auxiliaryLabel, BorderLayout.WEST);
+        auxiliaryPanel.add(auxiliaryLabel, BorderLayout.NORTH);
         auxiliaryPanel.add(auxiliaryPane, BorderLayout.CENTER);
         
         auxiliarySplit.add(replacementPanel);
@@ -240,6 +243,12 @@ public class RegexTester {
         patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
         patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
         patternPane.setCursor(blankCursor);
+        
+        // Wrap pattern pane in a panel with border
+        JPanel patternPanelWrapper = new JPanel(new BorderLayout());
+        patternPanelWrapper.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        patternPanelWrapper.add(patternPane, BorderLayout.CENTER);
+        patternPanelWrapper.setCursor(blankCursor);
         JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPane, replacementPane, buttonGroup);
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
 
@@ -271,7 +280,7 @@ public class RegexTester {
             }
         });
 
-        topPanel.add(patternPane, BorderLayout.CENTER);
+        topPanel.add(patternPanelWrapper, BorderLayout.CENTER);
 
         KeyAdapter keyListener = new KeyAdapter() {
             @Override
@@ -445,6 +454,7 @@ public class RegexTester {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setCursor(blankCursor);
         buttonPanel.setMinimumSize(new Dimension(100, 0)); // Allow height to grow when buttons wrap
+        buttonPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 
         buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.add(findButton);

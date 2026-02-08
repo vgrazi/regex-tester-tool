@@ -5,70 +5,225 @@ import com.vgrazi.regextester.component.Constants;
 import com.vgrazi.regextester.component.PatternPane;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.regex.Pattern;
 
 import static com.vgrazi.regextester.component.Constants.DEFAULT_LABEL_FONT;
 import static com.vgrazi.regextester.component.Constants.DEFAULT_PANE_FONT;
+import static com.vgrazi.regextester.component.Constants.DEFAULT_BUTTON_FONT;
 
 public class RegexTester {
 
     private static int flags;
+    // Create a 16×16 transparent image
+    private static BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+    // Create a new blank cursor
+    private static Cursor blankCursor = Toolkit.getDefaultToolkit()
+            .createCustomCursor(cursorImg, new Point(0, 0), "blank cursor");
+
+    // Flag to track cursor visibility
+    private static boolean cursorVisible = true;
+
+    // Method to toggle cursor visibility
+    private static void toggleCursorVisibility(Component component) {
+        cursorVisible = !cursorVisible;
+        Cursor cursor = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+        setCursorRecursively(component, cursor);
+    }
+
+    // Helper method to set cursor recursively on a component and its children
+    private static void setCursorRecursively(Component component, Cursor cursor) {
+        component.setCursor(cursor);
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                setCursorRecursively(child, cursor);
+            }
+        }
+    }
+
 
     public void launch() {
         JFrame frame = new JFrame("Regex Test Tool");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        // Add F1 and F2 key bindings to switch focus
+        InputMap inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = frame.getRootPane().getActionMap();
+
+        // F1 - Focus on input pane
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0), "focusInput");
+        actionMap.put("focusInput", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                characterPane.requestFocusInWindow();
+            }
+        });
+
+        // F2 - Focus on pattern pane
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0), "focusPattern");
+        actionMap.put("focusPattern", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                patternPane.requestFocusInWindow();
+            }
+        });
+
+        // F3 - Focus on replacement pane
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0), "focusReplacement");
+        actionMap.put("focusReplacement", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                replacementPane.requestFocusInWindow();
+            }
+        });
+
+        // F4 - Clear all panes
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), "clearPanes");
+        actionMap.put("clearPanes", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                patternPane.setText("");
+                characterPane.setText("");
+                replacementPane.setText("");
+                // Focus back to the pattern pane after clearing
+                patternPane.requestFocusInWindow();
+            }
+        });
+
+        // F6 - Toggle cursor
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "toggleCursor");
+        actionMap.put("toggleCursor", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleCursorVisibility(frame.getContentPane());
+            }
+        });
+
+        // F10 - Toggle help
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0), "showHelp");
+        ButtonGroup buttonGroup = new ButtonGroup();
+
+        actionMap.put("showHelp", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!showingHelp) {
+                    String helpText = """
+                                    F10 - Show Help
+                                    F1 - Enter Pattern
+                                    F2 - Enter Text
+                                    F3 - Enter replacement
+                                    F4 - Clear
+                                    F5 - Toggle cursor visibility
+                            """;
+                    characterPane.setText(helpText);
+                    showingHelp = true;
+                } else {
+                    showingHelp = false;
+                    characterPane.setText("");
+                    // Trigger a re-render of the character pane
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                }
+            }
+        });
+
+        // Apply it to the frame (or any component)
+        frame.getContentPane().setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        // Install UI so we can modify the divider
+        splitPane.setUI(new BasicSplitPaneUI() {
+            @Override
+            public BasicSplitPaneDivider createDefaultDivider() {
+                return new BasicSplitPaneDivider(this) {
+                    @Override
+                    public void setCursor(Cursor cursor) {
+                        // Force the divider to always use the blank cursor
+                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+                        super.setCursor(cursorToSet);
+                    }
+                };
+            }
+        });
+        splitPane.setCursor(blankCursor);
         splitPane.setDividerLocation(50);
 
         JPanel topPanel = new JPanel();
+        topPanel.setCursor(blankCursor);
+
         topPanel.setLayout(new BorderLayout());
 
         JLabel patternJlabel = new JLabel("Pattern  ");
+        patternJlabel.setCursor(blankCursor);
         patternJlabel.setVerticalAlignment(SwingConstants.TOP);
         patternJlabel.setBackground(Color.LIGHT_GRAY);
         patternJlabel.setFont(DEFAULT_LABEL_FONT);
+        patternJlabel.setCursor(blankCursor);
+
         topPanel.add(patternJlabel, BorderLayout.WEST);
 
         splitPane.add(topPanel);
 
         JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        // Install UI so we can modify the divider
+        bottomPane.setUI(new BasicSplitPaneUI() {
+            @Override
+            public BasicSplitPaneDivider createDefaultDivider() {
+                return new BasicSplitPaneDivider(this) {
+                    @Override
+                    public void setCursor(Cursor cursor) {
+                        // Force the divider to always use the blank cursor
+                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+                        super.setCursor(cursorToSet);
+                    }
+                };
+            }
+        });
+        bottomPane.setCursor(blankCursor);
         splitPane.setDividerLocation(.8d);
+        bottomPane.setCursor(blankCursor);
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
-        JTextPane characterPane = new JTextPane();
+        bottomPanel.setCursor(blankCursor);
+        characterPane = new JTextPane();
+        characterPane.setCursor(blankCursor);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
         JSplitPane auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        // Install UI so we can modify the divider
+        auxiliarySplit.setUI(new BasicSplitPaneUI() {
+            @Override
+            public BasicSplitPaneDivider createDefaultDivider() {
+                return new BasicSplitPaneDivider(this) {
+                    @Override
+                    public void setCursor(Cursor cursor) {
+                        // Force the divider to always use the blank cursor
+                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
+                        super.setCursor(cursorToSet);
+                    }
+                };
+            }
+        });
+        auxiliarySplit.setCursor(blankCursor);
         auxiliarySplit.setDividerLocation(40);
         JTextPane auxiliaryPane = new JTextPane();
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
         
-        // Add mouse wheel listener for font size adjustment
-        auxiliaryPane.addMouseWheelListener(e -> {
-            if (e.isControlDown()) {
-                Font currentFont = auxiliaryPane.getFont();
-                int newSize = currentFont.getSize() - e.getWheelRotation();
-                if (newSize >= 8 && newSize <= 72) {  // Limit font size between 8 and 72
-                    Font newFont = currentFont.deriveFont((float) newSize);
-                    auxiliaryPane.setFont(newFont);
-                    e.consume();
-                }
-            }
-        });
-
-        JTextPane replacementPane = new JTextPane();
+        replacementPane = new JTextPane();
+        replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
         auxiliarySplit.add(replacementPane);
         auxiliarySplit.add(auxiliaryPane);
-        PatternPane patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
-
-        ButtonGroup buttonGroup = new ButtonGroup();
+        patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
+        patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
+        patternPane.setCursor(blankCursor);
         JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPane, replacementPane, buttonGroup);
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
 
@@ -79,6 +234,9 @@ public class RegexTester {
         KeyAdapter keyListener = new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
+                if (e.isActionKey() || e.getKeyChar() == KeyEvent.CHAR_UNDEFINED) {
+                    return;
+                }
                 renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
                 Pattern pattern = Pattern.compile(patternPane.getText(), flags);
                 Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
@@ -87,7 +245,13 @@ public class RegexTester {
 
         characterPane.addKeyListener(keyListener);
         patternPane.addKeyListener(keyListener);
-        replacementPane.addKeyListener(keyListener);
+        replacementPane.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
+            }
+        });
 
         // even though there is a focus listener, we still need a mouse listener, in case the pattern pane already has
         // focus, when user clicks the mouse
@@ -116,6 +280,8 @@ public class RegexTester {
 
         frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
+
+        setCursorRecursively(frame.getContentPane(), cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
     }
 
     private static void formatPatternPane(PatternPane patternPane) {
@@ -164,6 +330,14 @@ public class RegexTester {
         JRadioButton replaceAllButton = new JRadioButton("Replace all");
         JRadioButton replaceFirstButton = new JRadioButton("Replace first");
         JRadioButton findButton = new JRadioButton("Find");
+
+        // Set cursor to default for radio buttons
+        matchButton.setCursor(Cursor.getDefaultCursor());
+        lookingAtButton.setCursor(Cursor.getDefaultCursor());
+        splitButton.setCursor(Cursor.getDefaultCursor());
+        replaceAllButton.setCursor(Cursor.getDefaultCursor());
+        replaceFirstButton.setCursor(Cursor.getDefaultCursor());
+        findButton.setCursor(Cursor.getDefaultCursor());
         findButton.setSelected(true);
 
         findButton.setActionCommand("find");
@@ -180,14 +354,15 @@ public class RegexTester {
         buttonGroup.add(replaceAllButton);
         buttonGroup.add(replaceFirstButton);
 
-        findButton.setFont(DEFAULT_LABEL_FONT);
-        matchButton.setFont(DEFAULT_LABEL_FONT);
-        lookingAtButton.setFont(DEFAULT_LABEL_FONT);
-        splitButton.setFont(DEFAULT_LABEL_FONT);
-        replaceAllButton.setFont(DEFAULT_LABEL_FONT);
-        replaceFirstButton.setFont(DEFAULT_LABEL_FONT);
+        findButton.setFont(DEFAULT_BUTTON_FONT);
+        matchButton.setFont(DEFAULT_BUTTON_FONT);
+        lookingAtButton.setFont(DEFAULT_BUTTON_FONT);
+        splitButton.setFont(DEFAULT_BUTTON_FONT);
+        replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
+        replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setCursor(blankCursor);
 
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.add(findButton);
@@ -202,17 +377,24 @@ public class RegexTester {
         JCheckBox dotallButton = new JCheckBox("Dot All");
         JCheckBox literalButton = new JCheckBox("Literal");
         JCheckBox multilineButton = new JCheckBox("Multiline");
+
+        // Set cursor to default for checkboxes
+        caseButton.setCursor(Cursor.getDefaultCursor());
+        commentsButton.setCursor(Cursor.getDefaultCursor());
+        dotallButton.setCursor(Cursor.getDefaultCursor());
+        literalButton.setCursor(Cursor.getDefaultCursor());
+        multilineButton.setCursor(Cursor.getDefaultCursor());
         buttonPanel.add(caseButton);
         buttonPanel.add(commentsButton);
         buttonPanel.add(dotallButton);
         buttonPanel.add(literalButton);
         buttonPanel.add(multilineButton);
 
-        caseButton.setFont(DEFAULT_LABEL_FONT);
-        commentsButton.setFont(DEFAULT_LABEL_FONT);
-        dotallButton.setFont(DEFAULT_LABEL_FONT);
-        literalButton.setFont(DEFAULT_LABEL_FONT);
-        multilineButton.setFont(DEFAULT_LABEL_FONT);
+        caseButton.setFont(DEFAULT_BUTTON_FONT);
+        commentsButton.setFont(DEFAULT_BUTTON_FONT);
+        dotallButton.setFont(DEFAULT_BUTTON_FONT);
+        literalButton.setFont(DEFAULT_BUTTON_FONT);
+        multilineButton.setFont(DEFAULT_BUTTON_FONT);
 
         ActionListener recalcFlagListener = e -> {
             flags = recalculateFlags(caseButton, commentsButton, dotallButton, literalButton, multilineButton);
@@ -243,6 +425,12 @@ public class RegexTester {
         flags |= multilineButton.isSelected() ? Pattern.MULTILINE : 0;
         return flags;
     }
+
+    private static JTextPane characterPane;
+    private static PatternPane patternPane;
+    private static JTextPane replacementPane;
+    private static JTextPane auxiliaryPane;
+    private static boolean showingHelp = false;
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {

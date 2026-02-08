@@ -81,7 +81,7 @@ public class Calculator {
      * @param auxiliaryPane
      * @return
      */
-    static List<ColorRange> processFinderCommand(Matcher matcher, String text, JEditorPane auxiliaryPane) {
+    static List<ColorRange> processFindCommand(Matcher matcher, String text, JEditorPane auxiliaryPane) {
         List<ColorRange> list = new ArrayList<>();
         int count = matcher.groupCount();
         StringBuilder groupString = new StringBuilder();
@@ -96,8 +96,8 @@ public class Calculator {
             for (int i = 0; i <= count; i++) {
                 String group = matcher.group(i);
                 if (group != null) {
-                    System.out.println(group);
-                    groupString.append(i).append(". ").append(group).append("\n");
+//                    System.out.println(group);
+                    groupString.append(i).append(". ").append(group);
                     if (i == count) {
                         groupString.append("\n");
                     }
@@ -145,12 +145,14 @@ public class Calculator {
         List<ColorRange> list;
         list = processFindCommand(matcher, text);
         String[] split = pattern.split(text);
-        String splitString = "";
+        StringBuilder splitString = new StringBuilder();
         if (!"".equals(text)) {
             System.out.println(Arrays.asList(split));
-            splitString = ">" + String.join("\n>", split);
+            for(int i  = 0; i < split.length; i++){
+                splitString.append(i).append(": ").append(split[i]).append("\n");
+            }
         }
-        auxiliaryPane.setText(splitString);
+        auxiliaryPane.setText(splitString.toString());
         return list;
     }
 

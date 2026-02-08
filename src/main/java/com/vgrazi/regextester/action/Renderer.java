@@ -72,6 +72,7 @@ public class Renderer {
      */
     public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String regex, String actionCommand) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
+        if(pattern.pattern().trim().isEmpty()) {auxiliaryPane.setText(""); return;}
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         if(text.indexOf("\r\n") > 0) {
@@ -88,7 +89,7 @@ public class Renderer {
 //                extractNamedGroups(regex);
 //                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
 //                list = Calculator.processFindCommand(matcher, text);
-                list = Calculator.processFinderCommand(matcher, text, auxiliaryPane);
+                list = Calculator.processFindCommand(matcher, text, auxiliaryPane);
                 break;
             case "looking-at":
 //                extractNamedGroups(regex);

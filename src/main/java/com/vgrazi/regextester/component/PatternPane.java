@@ -5,6 +5,8 @@ import com.vgrazi.regextester.action.Renderer;
 import com.vgrazi.regextester.action.UnmatchedLeftParenException;
 
 import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -26,6 +28,8 @@ public class PatternPane extends JTextPane {
      */
     private JTextPane characterPane;
     private JTextPane auxiliaryPane;
+    private Runnable characterPaneRenderer;
+    private int lastHighlightedGroupIndex = -1;
     private int flags;
     private final static Pattern CAPTURE_GROUP_PATTERN = Pattern.compile("\\((\\?([^<]+?))\\)");
 
@@ -34,17 +38,91 @@ public class PatternPane extends JTextPane {
         this.auxiliaryPane = auxiliaryPane;
         getStyledDocument().addStyle("highlights", null);
 
-        addKeyListener(
-                new KeyAdapter() {
-                    @Override
-                    public synchronized void keyReleased(KeyEvent e) {
+        // Add a single key typed listener for immediate response
+        addKeyListener(new KeyAdapter() {
+            private long lastUpdateTime = 0;
+            private final long UPDATE_THRESHOLD = 50; // ms between updates
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                // Only update if enough time has passed since last update
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastUpdateTime > UPDATE_THRESHOLD) {
+                    lastUpdateTime = currentTime;
+                    SwingUtilities.invokeLater(() -> {
                         renderMatchingGroupsInCharacterPane();
+                        if (characterPane != null) {
+                            characterPane.repaint();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                // Handle any immediate key presses if needed
+            }
+        });
+
+        addCaretListener(new CaretListener() {
+            private boolean pending;
+
+            @Override
+            public void caretUpdate(CaretEvent e) {
+                if (pending) {
+                    return;
+                }
+                pending = true;
+                SwingUtilities.invokeLater(() -> {
+                    pending = false;
+                    renderMatchingGroupsInCharacterPane();
+                });
                     }
                 });
+
+        // Keep the document listener for programmatic changes
+        getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private boolean pending;
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                // Attribute/style changes. Rendering changes styles, so reacting here can cause
+                // "Attempt to mutate in notification" recursion.
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                scheduleProgrammaticUpdate();
+            }
+
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                scheduleProgrammaticUpdate();
+            }
+
+            private void scheduleProgrammaticUpdate() {
+                // Only update if the document was changed programmatically (i.e., this pane doesn't have focus)
+                if (hasFocus() || pending) {
+                    return;
+                }
+                pending = true;
+                SwingUtilities.invokeLater(() -> {
+                    pending = false;
+                    renderMatchingGroupsInCharacterPane();
+                });
+            }
+        });
+
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
                 Renderer.resetColor(getStyledDocument());
+            }
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                // Update immediately when focus is gained
+                renderMatchingGroupsInCharacterPane();
             }
         });
     }
@@ -73,9 +151,11 @@ public class PatternPane extends JTextPane {
             ColorRange[] colorRanges = Calculator.parseGroupRanges(replaced, GROUP_COLOR);
             // if the cursor is at the start or end of any range, colorize that one
             int position = getCaretPosition();
+            int newHighlightedGroupIndex = -1;
             for (int groupIndex = 0; groupIndex < colorRanges.length; groupIndex++) {
                 ColorRange range = colorRanges[groupIndex];
                 if (range.getStart() == position - 1 || range.getEnd() == position - 1) {
+                    newHighlightedGroupIndex = groupIndex;
                     Renderer.colorize(getStyledDocument(), true, range);
                     // group index starts at 1, so add 1 to the list position
                     int finalGroupIndex = groupIndex;
@@ -97,10 +177,23 @@ public class PatternPane extends JTextPane {
                     break;
                 }
             }
+
+            if (newHighlightedGroupIndex == -1) {
+                if (lastHighlightedGroupIndex != -1 && characterPaneRenderer != null) {
+                    SwingUtilities.invokeLater(characterPaneRenderer);
+                }
+                lastHighlightedGroupIndex = -1;
+            } else {
+                lastHighlightedGroupIndex = newHighlightedGroupIndex;
+            }
         } catch (UnmatchedLeftParenException e1) {
             ColorRange range = new ColorRange(Color.red, e1.getPosition(), e1.getPosition()+1);
             Renderer.colorize(getStyledDocument(), true, range);
         }
+    }
+
+    public void setCharacterPaneRenderer(Runnable characterPaneRenderer) {
+        this.characterPaneRenderer = characterPaneRenderer;
     }
 
     private void addRadioButton(final String name, ButtonGroup buttonGroup, JComponent parent) {

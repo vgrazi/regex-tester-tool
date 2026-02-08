@@ -155,10 +155,26 @@ public class Calculator {
         auxiliaryPane.setText(splitString.toString());
         return list;
     }
-    static List<ColorRange> processSplitWithDelimitersCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
+    static List<ColorRange> processSplitWithDelimitersCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane) {
         List<ColorRange> list;
         list = processFindCommand(matcher, text);
-        String[] split = pattern.splitWithDelimiters(text, 0);
+        
+        // Parse limit from replacement pane text
+        int limit = 0; // default limit
+        String replacementText = replacementPane.getText().trim();
+        if (!replacementText.isEmpty()) {
+            try {
+                limit = Integer.parseInt(replacementText);
+                if (limit < 0) {
+                    limit = 0; // reset to default if negative
+                }
+            } catch (NumberFormatException e) {
+                // If parsing fails, use default limit of 0
+                limit = 0;
+            }
+        }
+        
+        String[] split = pattern.splitWithDelimiters(text, limit);
         StringBuilder splitString = new StringBuilder();
         if (!"".equals(text)) {
             System.out.println(Arrays.asList(split));

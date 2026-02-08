@@ -195,21 +195,7 @@ public class RegexTester {
         characterPane.setCursor(blankCursor);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
-        JSplitPane auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        // Install UI so we can modify the divider
-        auxiliarySplit.setUI(new BasicSplitPaneUI() {
-            @Override
-            public BasicSplitPaneDivider createDefaultDivider() {
-                return new BasicSplitPaneDivider(this) {
-                    @Override
-                    public void setCursor(Cursor cursor) {
-                        // Force the divider to always use the blank cursor
-                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
-                        super.setCursor(cursorToSet);
-                    }
-                };
-            }
-        });
+        auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         auxiliarySplit.setCursor(blankCursor);
         auxiliarySplit.setDividerLocation(40);
         JTextPane auxiliaryPane = new JTextPane();
@@ -219,8 +205,37 @@ public class RegexTester {
         replacementPane = new JTextPane();
         replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
-        auxiliarySplit.add(replacementPane);
-        auxiliarySplit.add(auxiliaryPane);
+        
+        // Create panel for replacement pane with label
+        replacementPanel = new JPanel();
+        replacementPanel.setLayout(new BorderLayout());
+        replacementPanel.setCursor(blankCursor);
+        replacementLabel = new JLabel("Replacement  ");
+        replacementLabel.setCursor(blankCursor);
+        replacementLabel.setVerticalAlignment(SwingConstants.TOP);
+        replacementLabel.setBackground(Color.LIGHT_GRAY);
+        replacementLabel.setFont(DEFAULT_LABEL_FONT);
+        replacementPanel.add(replacementLabel, BorderLayout.WEST);
+        replacementPanel.add(replacementPane, BorderLayout.CENTER);
+        
+        // Create panel for auxiliary pane with label
+        JPanel auxiliaryPanel = new JPanel();
+        auxiliaryPanel.setLayout(new BorderLayout());
+        auxiliaryPanel.setCursor(blankCursor);
+        JLabel auxiliaryLabel = new JLabel("Results  ");
+        auxiliaryLabel.setCursor(blankCursor);
+        auxiliaryLabel.setVerticalAlignment(SwingConstants.TOP);
+        auxiliaryLabel.setBackground(Color.LIGHT_GRAY);
+        auxiliaryLabel.setFont(DEFAULT_LABEL_FONT);
+        auxiliaryPanel.add(auxiliaryLabel, BorderLayout.WEST);
+        auxiliaryPanel.add(auxiliaryPane, BorderLayout.CENTER);
+        
+        auxiliarySplit.add(replacementPanel);
+        auxiliarySplit.add(auxiliaryPanel);
+        
+        // Hide replacement panel initially since "find" is selected by default
+        replacementPanel.setVisible(false);
+        
         patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
         patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
         patternPane.setCursor(blankCursor);
@@ -248,14 +263,18 @@ public class RegexTester {
         replacementPane.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
-                Pattern pattern = Pattern.compile(patternPane.getText(), flags);
-                Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
+                // Only re-render for split-with-delimiters when limit changes
+                String actionCommand = buttonGroup.getSelection().getActionCommand();
+                if ("split-with-delimiters".equals(actionCommand)) {
+                    Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                    Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), actionCommand);
+                }
             }
         });
 
         // even though there is a focus listener, we still need a mouse listener, in case the pattern pane already has
         // focus, when user clicks the mouse
-        patternPane.addMouseListener(new MouseAdapter() {
+        MouseAdapter mouseListener = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 StyledDocument styledDocument = patternPane.getStyledDocument();
@@ -269,7 +288,10 @@ public class RegexTester {
                     e1.printStackTrace();
                 }
             }
-        });
+        };
+        patternPane.addMouseListener(mouseListener);
+//        replacementPane.addMouseListener(mouseListener);
+        replacementPane.addKeyListener(keyListener);
 
 
         bottomPane.add(bottomPanel);
@@ -412,7 +434,34 @@ public class RegexTester {
         dotallButton.addActionListener(recalcFlagListener);
         literalButton.addActionListener(recalcFlagListener);
         multilineButton.addActionListener(recalcFlagListener);
-        ActionListener actionListener = e -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+        ActionListener actionListener = e -> {
+            if (updatingVisibility) return; // Prevent recursive calls
+            updatingVisibility = true;
+            try {
+                // Update replacement label and visibility based on selected action
+                String actionCommand = buttonGroup.getSelection().getActionCommand();
+                if ("split-with-delimiters".equals(actionCommand)) {
+                    replacementLabel.setText("Limit  ");
+                    replacementPanel.setVisible(true);
+                    // Set divider location to ensure panel has proper height
+                    auxiliarySplit.setDividerLocation(40);
+                } else if ("replace-all".equals(actionCommand) || "replace-first".equals(actionCommand)) {
+                    replacementLabel.setText("Replacement  ");
+                    replacementPanel.setVisible(true);
+                    // Set divider location to ensure panel has proper height
+                    auxiliarySplit.setDividerLocation(40);
+                } else {
+                    replacementLabel.setText("Replacement  ");
+                    replacementPanel.setVisible(false);
+                }
+                // Revalidate the split pane to apply visibility changes
+                auxiliarySplit.revalidate();
+                auxiliarySplit.repaint();
+                renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+            } finally {
+                updatingVisibility = false;
+            }
+        };
         findButton.addActionListener(actionListener);
         lookingAtButton.addActionListener(actionListener);
         matchButton.addActionListener(actionListener);
@@ -437,7 +486,11 @@ public class RegexTester {
     private static PatternPane patternPane;
     private static JTextPane replacementPane;
     private static JTextPane auxiliaryPane;
+    private static JLabel replacementLabel;
+    private static JPanel replacementPanel;
+    private static JSplitPane auxiliarySplit;
     private static boolean showingHelp = false;
+    private static boolean updatingVisibility = false;
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {

@@ -48,6 +48,19 @@ public class RegexTester {
         JTextPane auxiliaryPane = new JTextPane();
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
+        
+        // Add mouse wheel listener for font size adjustment
+        auxiliaryPane.addMouseWheelListener(e -> {
+            if (e.isControlDown()) {
+                Font currentFont = auxiliaryPane.getFont();
+                int newSize = currentFont.getSize() - e.getWheelRotation();
+                if (newSize >= 8 && newSize <= 72) {  // Limit font size between 8 and 72
+                    Font newFont = currentFont.deriveFont((float) newSize);
+                    auxiliaryPane.setFont(newFont);
+                    e.consume();
+                }
+            }
+        });
 
         JTextPane replacementPane = new JTextPane();
         replacementPane.setFont(DEFAULT_PANE_FONT);
@@ -67,17 +80,14 @@ public class RegexTester {
             @Override
             public void keyReleased(KeyEvent e) {
                 renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
-            }
-        };
-        characterPane.addKeyListener(keyListener);
-        patternPane.addKeyListener(keyListener);
-        replacementPane.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
                 Pattern pattern = Pattern.compile(patternPane.getText(), flags);
                 Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
             }
-        });
+        };
+
+        characterPane.addKeyListener(keyListener);
+        patternPane.addKeyListener(keyListener);
+        replacementPane.addKeyListener(keyListener);
 
         // even though there is a focus listener, we still need a mouse listener, in case the pattern pane already has
         // focus, when user clicks the mouse
@@ -112,14 +122,39 @@ public class RegexTester {
         patternPane.setFont(Constants.DEFAULT_PANE_FONT);
         patternPane.setForeground(Constants.FONT_COLOR);
         patternPane.setBackground(Constants.BACKGROUND_COLOR);
+        
+        // Add mouse wheel listener for font size adjustment
+        patternPane.addMouseWheelListener(e -> {
+            if (e.isControlDown()) {
+                Font currentFont = patternPane.getFont();
+                int newSize = currentFont.getSize() - e.getWheelRotation();
+                if (newSize >= 8 && newSize <= 72) {  // Limit font size between 8 and 72
+                    Font newFont = currentFont.deriveFont((float) newSize);
+                    patternPane.setFont(newFont);
+                    e.consume();
+                }
+            }
+        });
     }
 
     private static void formatCharacterPane(JTextPane characterPane) {
         characterPane.setForeground(Constants.FONT_COLOR);
         characterPane.setBackground(Constants.BACKGROUND_COLOR);
         characterPane.setFont(Constants.DEFAULT_PANE_FONT);
-
         characterPane.getStyledDocument().addStyle("highlights", null);
+        
+        // Add mouse wheel listener for font size adjustment
+        characterPane.addMouseWheelListener(e -> {
+            if (e.isControlDown()) {
+                Font currentFont = characterPane.getFont();
+                int newSize = currentFont.getSize() - e.getWheelRotation();
+                if (newSize >= 8 && newSize <= 72) {  // Limit font size between 8 and 72
+                    Font newFont = currentFont.deriveFont((float) newSize);
+                    characterPane.setFont(newFont);
+                    e.consume();
+                }
+            }
+        });
     }
 
     private static JPanel createButtonPanel(PatternPane patternPane, JTextPane characterPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
@@ -214,7 +249,7 @@ public class RegexTester {
             String regex = patternPane.getText();
             Pattern pattern = Pattern.compile(regex, flags);
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, regex, buttonGroup.getSelection().getActionCommand());
-            patternPane.setBorder(Constants.WHITE_BORDER);
+//            patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             System.out.println("RegexTester.renderCharacterPane " + e);
             Renderer.resetColor(characterPane.getStyledDocument());

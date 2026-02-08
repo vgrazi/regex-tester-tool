@@ -327,6 +327,7 @@ public class RegexTester {
         JRadioButton matchButton = new JRadioButton("Matches");
         JRadioButton lookingAtButton = new JRadioButton("Looking at");
         JRadioButton splitButton = new JRadioButton("Split");
+        JRadioButton splitWithDelimitersButton = new JRadioButton("Split with delimiters");
         JRadioButton replaceAllButton = new JRadioButton("Replace all");
         JRadioButton replaceFirstButton = new JRadioButton("Replace first");
         JRadioButton findButton = new JRadioButton("Find");
@@ -335,6 +336,7 @@ public class RegexTester {
         matchButton.setCursor(Cursor.getDefaultCursor());
         lookingAtButton.setCursor(Cursor.getDefaultCursor());
         splitButton.setCursor(Cursor.getDefaultCursor());
+        splitWithDelimitersButton.setCursor(Cursor.getDefaultCursor());
         replaceAllButton.setCursor(Cursor.getDefaultCursor());
         replaceFirstButton.setCursor(Cursor.getDefaultCursor());
         findButton.setCursor(Cursor.getDefaultCursor());
@@ -344,6 +346,7 @@ public class RegexTester {
         matchButton.setActionCommand("matches");
         lookingAtButton.setActionCommand("looking-at");
         splitButton.setActionCommand("split");
+        splitWithDelimitersButton.setActionCommand("split-with-delimiters");
         replaceAllButton.setActionCommand("replace-all");
         replaceFirstButton.setActionCommand("replace-first");
 
@@ -351,6 +354,7 @@ public class RegexTester {
         buttonGroup.add(matchButton);
         buttonGroup.add(lookingAtButton);
         buttonGroup.add(splitButton);
+        buttonGroup.add(splitWithDelimitersButton);
         buttonGroup.add(replaceAllButton);
         buttonGroup.add(replaceFirstButton);
 
@@ -358,6 +362,7 @@ public class RegexTester {
         matchButton.setFont(DEFAULT_BUTTON_FONT);
         lookingAtButton.setFont(DEFAULT_BUTTON_FONT);
         splitButton.setFont(DEFAULT_BUTTON_FONT);
+        splitWithDelimitersButton.setFont(DEFAULT_BUTTON_FONT);
         replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
         replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
@@ -369,6 +374,7 @@ public class RegexTester {
         buttonPanel.add(matchButton);
         buttonPanel.add(lookingAtButton);
         buttonPanel.add(splitButton);
+        buttonPanel.add(splitWithDelimitersButton);
         buttonPanel.add(replaceAllButton);
         buttonPanel.add(replaceFirstButton);
         buttonPanel.add(Box.createHorizontalGlue());
@@ -413,6 +419,7 @@ public class RegexTester {
         replaceAllButton.addActionListener(actionListener);
         replaceFirstButton.addActionListener(actionListener);
         splitButton.addActionListener(actionListener);
+        splitWithDelimitersButton.addActionListener(actionListener);
         return buttonPanel;
     }
 

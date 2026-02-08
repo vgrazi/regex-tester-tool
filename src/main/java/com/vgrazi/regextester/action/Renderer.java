@@ -104,6 +104,11 @@ public class Renderer {
 //                auxiliaryPane.doLayout();
                 list = Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
                 break;
+            case "split-with-delimiters":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
+                list = Calculator.processSplitWithDelimitersCommand(matcher, text, auxiliaryPane, pattern);
+                break;
             case "replace-all":
 //                auxiliaryPane.removeAll();
 //                auxiliaryPane.doLayout();

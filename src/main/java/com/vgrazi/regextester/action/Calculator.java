@@ -155,6 +155,20 @@ public class Calculator {
         auxiliaryPane.setText(splitString.toString());
         return list;
     }
+    static List<ColorRange> processSplitWithDelimitersCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
+        List<ColorRange> list;
+        list = processFindCommand(matcher, text);
+        String[] split = pattern.splitWithDelimiters(text, 0);
+        StringBuilder splitString = new StringBuilder();
+        if (!"".equals(text)) {
+            System.out.println(Arrays.asList(split));
+            for(int i  = 0; i < split.length; i++){
+                splitString.append(i).append(": ").append(split[i]).append("\n");
+            }
+        }
+        auxiliaryPane.setText(splitString.toString());
+        return list;
+    }
 
     static List<ColorRange> processReplaceAllCommand(Matcher matcher, String text, JTextPane auxiliaryPanel, JTextPane replacementPane) {
         List<ColorRange> list = processFindCommand(matcher, text);

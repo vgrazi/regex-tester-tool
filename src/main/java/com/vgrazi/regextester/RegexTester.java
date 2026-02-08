@@ -302,6 +302,14 @@ public class RegexTester {
 
         frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
+        
+        // Set divider location after frame is visible to get correct dimensions
+        SwingUtilities.invokeLater(() -> {
+            int totalWidth = bottomPane.getWidth();
+            if (totalWidth > 0) {
+                bottomPane.setDividerLocation((int)(totalWidth * 0.6));
+            }
+        });
 
         setCursorRecursively(frame.getContentPane(), cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
     }
@@ -388,18 +396,6 @@ public class RegexTester {
         replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
         replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setCursor(blankCursor);
-
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-        buttonPanel.add(findButton);
-        buttonPanel.add(matchButton);
-        buttonPanel.add(lookingAtButton);
-        buttonPanel.add(splitButton);
-        buttonPanel.add(splitWithDelimitersButton);
-        buttonPanel.add(replaceAllButton);
-        buttonPanel.add(replaceFirstButton);
-        buttonPanel.add(Box.createHorizontalGlue());
         JCheckBox caseButton = new JCheckBox("Case Insensitive");
         JCheckBox commentsButton = new JCheckBox("Comments");
         JCheckBox dotallButton = new JCheckBox("Dot All");
@@ -412,11 +408,75 @@ public class RegexTester {
         dotallButton.setCursor(Cursor.getDefaultCursor());
         literalButton.setCursor(Cursor.getDefaultCursor());
         multilineButton.setCursor(Cursor.getDefaultCursor());
+
+        caseButton.setFont(DEFAULT_BUTTON_FONT);
+        commentsButton.setFont(DEFAULT_BUTTON_FONT);
+        dotallButton.setFont(DEFAULT_BUTTON_FONT);
+        literalButton.setFont(DEFAULT_BUTTON_FONT);
+        multilineButton.setFont(DEFAULT_BUTTON_FONT);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setCursor(blankCursor);
+        buttonPanel.setMinimumSize(new Dimension(100, 0)); // Allow height to grow when buttons wrap
+
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.add(findButton);
+        buttonPanel.add(matchButton);
+        buttonPanel.add(lookingAtButton);
+        buttonPanel.add(splitButton);
+        buttonPanel.add(splitWithDelimitersButton);
+        buttonPanel.add(replaceAllButton);
+        buttonPanel.add(replaceFirstButton);
         buttonPanel.add(caseButton);
         buttonPanel.add(commentsButton);
         buttonPanel.add(dotallButton);
         buttonPanel.add(literalButton);
         buttonPanel.add(multilineButton);
+
+        // Add component listener to dynamically adjust height based on button layout
+        final boolean[] adjustingHeight = {false}; // Guard flag to prevent recursion
+        buttonPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                if (adjustingHeight[0]) return; // Prevent recursive calls
+                adjustingHeight[0] = true;
+                try {
+                    SwingUtilities.invokeLater(() -> {
+                        FlowLayout layout = (FlowLayout) buttonPanel.getLayout();
+                        int width = buttonPanel.getWidth();
+                        if (width <= 0) return; // Skip if not yet initialized
+                        
+                        // Get actual button height for more accurate calculation
+                        int buttonHeight = findButton.getPreferredSize().height;
+                        int lineHeight = buttonHeight + layout.getVgap();
+                        
+                        // Calculate required height based on actual button layout
+                        int totalWidth = 0;
+                        int maxWidth = width - layout.getHgap() * 2; // Account for margins
+                        int linesNeeded = 1;
+                        
+                        for (Component component : buttonPanel.getComponents()) {
+                            int componentWidth = component.getPreferredSize().width + layout.getHgap();
+                            if (totalWidth + componentWidth > maxWidth && totalWidth > 0) {
+                                linesNeeded++;
+                                totalWidth = componentWidth;
+                            } else {
+                                totalWidth += componentWidth;
+                            }
+                        }
+                        
+                        int requiredHeight = linesNeeded * lineHeight + layout.getVgap();
+                        Dimension currentSize = buttonPanel.getPreferredSize();
+                        if (currentSize.height != requiredHeight) {
+                            buttonPanel.setPreferredSize(new Dimension(width, requiredHeight));
+                            buttonPanel.revalidate();
+                        }
+                    });
+                } finally {
+                    adjustingHeight[0] = false;
+                }
+            }
+        });
 
         caseButton.setFont(DEFAULT_BUTTON_FONT);
         commentsButton.setFont(DEFAULT_BUTTON_FONT);
@@ -443,16 +503,24 @@ public class RegexTester {
                 if ("split-with-delimiters".equals(actionCommand)) {
                     replacementLabel.setText("Limit  ");
                     replacementPanel.setVisible(true);
-                    // Set divider location to ensure panel has proper height
+                    // Set minimum sizes and divider location
+                    replacementPanel.setMinimumSize(new Dimension(0, 40));
+                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
                     auxiliarySplit.setDividerLocation(40);
                 } else if ("replace-all".equals(actionCommand) || "replace-first".equals(actionCommand)) {
                     replacementLabel.setText("Replacement  ");
                     replacementPanel.setVisible(true);
-                    // Set divider location to ensure panel has proper height
+                    // Set minimum sizes and divider location
+                    replacementPanel.setMinimumSize(new Dimension(0, 40));
+                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
                     auxiliarySplit.setDividerLocation(40);
                 } else {
                     replacementLabel.setText("Replacement  ");
                     replacementPanel.setVisible(false);
+                    // Set minimum sizes to allow full collapse
+                    replacementPanel.setMinimumSize(new Dimension(0, 0));
+                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                    auxiliarySplit.setDividerLocation(0);
                 }
                 // Revalidate the split pane to apply visibility changes
                 auxiliarySplit.revalidate();

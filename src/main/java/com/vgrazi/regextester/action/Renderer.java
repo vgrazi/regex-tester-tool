@@ -29,8 +29,7 @@ public class Renderer {
      */
     public static void colorize(StyledDocument doc, boolean resetColor, ColorRange... colorRanges) {
         Style font = doc.getStyle("highlights");
-        if (resetColor)
-        {
+        if (resetColor) {
             StyleConstants.setBackground(font, BACKGROUND_COLOR);
             doc.setCharacterAttributes(0, doc.getLength(), font, true);
         }
@@ -51,9 +50,9 @@ public class Renderer {
     /**
      * When the caret has highlighted a group, we want to select the matching groups in the character pane
      * @param characterPane the JPanel containing the target text
-     * @param groupIndex the index of the group
-     * @param regex the regex pattern
-     * @param flags the selected flags
+     * @param groupIndex    the index of the group
+     * @param regex         the regex pattern
+     * @param flags         the selected flags
      */
     public static void renderMatchingGroupsHighlightsInCharacterPane(JTextPane characterPane, int groupIndex, String regex, int flags) {
         List<ColorRange> list = Calculator.calculateMatchingGroups(characterPane, groupIndex, regex, flags);
@@ -63,16 +62,16 @@ public class Renderer {
 
     /**
      * Renders the character pane, according to the selected radio button
-     * @param characterPane the JPanel containing the target text
-     * @param auxiliaryPane the pane where we render splits
-     * @param pattern the compiled Pattern instance
+     *
+     * @param characterPane   the JPanel containing the target text
+     * @param auxiliaryPane   the pane where we render splits
+     * @param pattern         the compiled Pattern instance
      * @param replacementPane the JPanel where we render placements
-     * @param regex the pattern regex
-     * @param actionCommand the action command representing the clicked button
+     * @param regex           the pattern regex
+     * @param actionCommand   the action command representing the clicked button
      */
     public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String regex, String actionCommand) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
-        if(pattern.pattern().trim().isEmpty()) {auxiliaryPane.setText(""); return;}
         List<ColorRange> list = new ArrayList<>();
         String text = characterPane.getText();
         if(text.indexOf("\r\n") > 0) {
@@ -120,15 +119,20 @@ public class Renderer {
                 list = Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
                 break;
         }
+
         ColorRange[] ranges = new ColorRange[list.size()];
         colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
+        if (pattern.pattern().trim().isEmpty()) {
+            auxiliaryPane.setText("");
+        }
     }
 
     /**
      * Highlights all matches in the character pane for the specified group name
-     * @param flags the selected flags
-     * @param groupName the name of the named group
-     * @param patternPane  the JPanel containing the regex pattern
+     *
+     * @param flags         the selected flags
+     * @param groupName     the name of the named group
+     * @param patternPane   the JPanel containing the regex pattern
      * @param characterPane the JPanel containing the target text
      * @param auxiliaryPane the pane where we render replacements and splits
      */

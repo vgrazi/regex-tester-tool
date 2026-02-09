@@ -9,6 +9,7 @@ import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
+import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -195,6 +196,7 @@ public class RegexTester {
         bottomPanel.setCursor(blankCursor);
         characterPane = new JTextPane();
         characterPane.setCursor(blankCursor);
+        setupUndoFunctionality(characterPane);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
         auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -259,13 +261,25 @@ public class RegexTester {
             @Override
             public void insertUpdate(javax.swing.event.DocumentEvent e) {
                 SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+                // Also trigger rerendering for pattern changes
+                SwingUtilities.invokeLater(() -> {
+                    patternPane.renderMatchingGroupsInCharacterPane();
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                });
             }
-            
+
             @Override
             public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                System.out.println("RegexTester removeUpdate fired - length: " + e.getLength() + " offset: " + e.getOffset());
                 SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+                // Also trigger rerendering for pattern changes
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("RegexTester - calling renderCharacterPane after remove");
+                    patternPane.renderMatchingGroupsInCharacterPane();
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                });
             }
-            
+
             @Override
             public void changedUpdate(javax.swing.event.DocumentEvent e) {
                 SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
@@ -623,6 +637,53 @@ public class RegexTester {
     private static boolean showingHelp = false;
     private static boolean updatingVisibility = false;
     private static boolean adjustingPatternHeight = false;
+
+    private static UndoManager setupUndoFunctionality(JTextPane textPane) {
+        UndoManager undoManager = new UndoManager();
+        // Set a reasonable limit for undo history (100 edits)
+        undoManager.setLimit(100);
+
+        // For regular text panes, add immediately
+        textPane.getDocument().addUndoableEditListener(e -> {
+            undoManager.addEdit(e.getEdit());
+            System.out.println("CharacterPane undo edit added: " + e.getEdit().getPresentationName());
+        });
+
+        // Add Ctrl+Z key binding for undo
+        InputMap inputMap = textPane.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = textPane.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), "undo");
+        actionMap.put("undo", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (undoManager.canUndo()) {
+                    undoManager.undo();
+                    System.out.println("Undo performed. Can undo: " + undoManager.canUndo() + ", Can redo: " + undoManager.canRedo());
+                    // Trigger a re-render if this is the pattern pane
+                } else {
+                    System.out.println("No more undo operations available");
+                }
+            }
+        });
+
+        // Also add Ctrl+Y for redo
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK), "redo");
+        actionMap.put("redo", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (undoManager.canRedo()) {
+                    undoManager.redo();
+                    System.out.println("Redo performed. Can undo: " + undoManager.canUndo() + ", Can redo: " + undoManager.canRedo());
+                    // Trigger a re-render if this is the pattern pane
+                } else {
+                    System.out.println("No more redo operations available");
+                }
+            }
+        });
+
+        return undoManager;
+    }
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         try {

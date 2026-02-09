@@ -50,9 +50,9 @@ public class Renderer {
     /**
      * When the caret has highlighted a group, we want to select the matching groups in the character pane
      * @param characterPane the JPanel containing the target text
-     * @param groupIndex the index of the group
-     * @param regex the regex pattern
-     * @param flags the selected flags
+     * @param groupIndex    the index of the group
+     * @param regex         the regex pattern
+     * @param flags         the selected flags
      */
     public static void renderMatchingGroupsHighlightsInCharacterPane(JTextPane characterPane, int groupIndex, String regex, int flags) {
         List<ColorRange> list = Calculator.calculateMatchingGroups(characterPane, groupIndex, regex, flags);
@@ -62,66 +62,77 @@ public class Renderer {
 
     /**
      * Renders the character pane, according to the selected radio button
-     * @param characterPane the JPanel containing the target text
-     * @param auxiliaryPane the pane where we render splits
-     * @param pattern the compiled Pattern instance
+     *
+     * @param characterPane   the JPanel containing the target text
+     * @param auxiliaryPane   the pane where we render splits
+     * @param pattern         the compiled Pattern instance
      * @param replacementPane the JPanel where we render placements
-     * @param regex the pattern regex
-     * @param actionCommand the action command representing the clicked button
+     * @param regex           the pattern regex
+     * @param actionCommand   the action command representing the clicked button
      */
     public static void renderCharacterPane(JTextPane characterPane, final JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane, String regex, String actionCommand) {
         replacementPane.setBorder(Constants.WHITE_BORDER);
         List<ColorRange> list = new ArrayList<>();
-
-        // Clear auxiliary pane if pattern is empty
-        if (regex == null || regex.trim().isEmpty()) {
-            auxiliaryPane.setText("");
-            auxiliaryPane.setBorder(Constants.WHITE_BORDER);
-            return;
-        }
-
         String text = characterPane.getText();
         if(text.indexOf("\r\n") > 0) {
             text = text.replaceAll("\r\n", "\r");
             characterPane.setText(text);
         }
-
-        try {
-            // Only proceed if we have a valid pattern
-            Pattern testPattern = Pattern.compile(regex);
-            Matcher matcher = testPattern.matcher(text);
-
-            if(!actionCommand.equals(previousCommand)) {
-                auxiliaryPane.setText("");
-                previousCommand = actionCommand;
-            }
-
-            list = switch (actionCommand) {
-                case "find" -> Calculator.processFinderCommand(matcher, text, auxiliaryPane);
-                case "looking-at" -> Calculator.processLookingAtCommand(matcher, text);
-                case "matches" -> {
-                    extractNamedGroups(regex);
-                    yield Calculator.processMatchesCommand(matcher, text, auxiliaryPane);
-                }
-                case "split" -> Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
-                case "replace-all" -> Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
-                case "replace-first" -> Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
-                default -> list;
-            };
-
-            ColorRange[] ranges = new ColorRange[list.size()];
-            colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
-
-        } catch (Exception e) {
-            // If pattern is invalid, clear the auxiliary pane
+        Matcher matcher = pattern.matcher(text);
+        if(!actionCommand.equals(previousCommand)) {
             auxiliaryPane.setText("");
-            auxiliaryPane.setBorder(Constants.WHITE_BORDER);
+            previousCommand = actionCommand;
         }
-    }    /**
+        switch(actionCommand) {
+            case "find":
+//                extractNamedGroups(regex);
+//                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+//                list = Calculator.processFindCommand(matcher, text);
+                list = Calculator.processFindCommand(matcher, text, auxiliaryPane);
+                break;
+            case "looking-at":
+//                extractNamedGroups(regex);
+                list = Calculator.processLookingAtCommand(matcher, text);
+                break;
+            case "matches":
+                extractNamedGroups(regex);
+                list = Calculator.processMatchesCommand(matcher, text);
+                break;
+            case "split":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
+                list = Calculator.processSplitCommand(matcher, text, auxiliaryPane, pattern);
+                break;
+            case "split-with-delimiters":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
+                list = Calculator.processSplitWithDelimitersCommand(matcher, text, auxiliaryPane, pattern, replacementPane);
+                break;
+            case "replace-all":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
+                list = Calculator.processReplaceAllCommand(matcher, text, auxiliaryPane, replacementPane);
+                break;
+            case "replace-first":
+//                auxiliaryPane.removeAll();
+//                auxiliaryPane.doLayout();
+                list = Calculator.processReplaceFirstCommand(matcher, text, auxiliaryPane, replacementPane);
+                break;
+        }
+
+        ColorRange[] ranges = new ColorRange[list.size()];
+        colorize(characterPane.getStyledDocument(), true, list.toArray(ranges));
+        if (pattern.pattern().trim().isEmpty()) {
+            auxiliaryPane.setText("");
+        }
+    }
+
+    /**
      * Highlights all matches in the character pane for the specified group name
-     * @param flags the selected flags
-     * @param groupName the name of the named group
-     * @param patternPane  the JPanel containing the regex pattern
+     *
+     * @param flags         the selected flags
+     * @param groupName     the name of the named group
+     * @param patternPane   the JPanel containing the regex pattern
      * @param characterPane the JPanel containing the target text
      * @param auxiliaryPane the pane where we render replacements and splits
      */

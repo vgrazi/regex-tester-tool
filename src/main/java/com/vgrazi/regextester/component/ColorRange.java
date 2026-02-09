@@ -3,7 +3,7 @@ package com.vgrazi.regextester.component;
 import java.awt.*;
 
 /**
- * This is the fundamental class used for containing ranges and colors.
+ * This is the fundamental class used for containing ranges and colors in the patternPane.
  * start is the position of the first character in the range, end is the last character (inclusive) and size is calculated as end-start+1
  * If inclusive is true, that tells the renderer
  * to color the entire range, whereas if it is fault, it only colors the first and last characters

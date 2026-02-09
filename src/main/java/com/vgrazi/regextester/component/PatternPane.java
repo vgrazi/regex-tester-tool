@@ -42,7 +42,7 @@ public class PatternPane extends JTextPane {
         addKeyListener(new KeyAdapter() {
             private long lastUpdateTime = 0;
             private final long UPDATE_THRESHOLD = 50; // ms between updates
-            
+
             @Override
             public void keyTyped(KeyEvent e) {
                 // Only update if enough time has passed since last update
@@ -57,7 +57,7 @@ public class PatternPane extends JTextPane {
                     });
                 }
             }
-            
+
             @Override
             public void keyPressed(KeyEvent e) {
                 // Handle any immediate key presses if needed
@@ -79,50 +79,69 @@ public class PatternPane extends JTextPane {
                 });
             }
         });
-        
-        // Keep the document listener for programmatic changes
-        getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            private boolean pending;
 
-            @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) {
-                // Attribute/style changes. Rendering changes styles, so reacting here can cause
-                // "Attempt to mutate in notification" recursion.
-            }
-
-            @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) {
-                scheduleProgrammaticUpdate();
-            }
-
-            @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) {
-                scheduleProgrammaticUpdate();
-            }
-
-            private void scheduleProgrammaticUpdate() {
-                // Only update if the document was changed programmatically (i.e., this pane doesn't have focus)
-                if (hasFocus() || pending) {
-                    return;
-                }
-                pending = true;
-                SwingUtilities.invokeLater(() -> {
-                    pending = false;
-                    renderMatchingGroupsInCharacterPane();
-                });
-            }
-        });
         
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
                 Renderer.resetColor(getStyledDocument());
             }
-            
+
             @Override
             public void focusGained(FocusEvent e) {
                 // Update immediately when focus is gained
                 renderMatchingGroupsInCharacterPane();
+            }
+        });
+
+        // Add property change listener to catch text changes
+        addPropertyChangeListener("document", evt -> {
+            triggerRerender();
+        });
+
+        // Add document listener as backup
+        getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                triggerRerender();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                triggerRerender();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                // Don't react to style changes
+            }
+        });
+    }
+
+    // Override text modification methods to catch all changes
+    @Override
+    public void cut() {
+        super.cut();
+        triggerRerender();
+    }
+
+    @Override
+    public void paste() {
+        super.paste();
+        triggerRerender();
+    }
+
+    @Override
+    public void replaceSelection(String content) {
+        super.replaceSelection(content);
+        triggerRerender();
+    }
+
+    private void triggerRerender() {
+        SwingUtilities.invokeLater(() -> {
+            renderMatchingGroupsInCharacterPane();
+            if (characterPaneRenderer != null) {
+                characterPaneRenderer.run();
             }
         });
     }

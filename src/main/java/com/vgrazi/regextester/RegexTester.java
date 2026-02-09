@@ -9,6 +9,7 @@ import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
+import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -19,6 +20,7 @@ import static com.vgrazi.regextester.component.Constants.DEFAULT_PANE_FONT;
 import static com.vgrazi.regextester.component.Constants.DEFAULT_BUTTON_FONT;
 
 public class RegexTester {
+    private final static JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
     private static int flags;
     // Create a 16×16 transparent image
@@ -50,7 +52,7 @@ public class RegexTester {
 
 
     public void launch() {
-        JFrame frame = new JFrame("Regex Tester Tool");
+        JFrame frame = new JFrame("Regex Test Tool");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         // Add F1 and F2 key bindings to switch focus
@@ -135,7 +137,6 @@ public class RegexTester {
 
         // Apply it to the frame (or any component)
         frame.getContentPane().setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         // Install UI so we can modify the divider
         splitPane.setUI(new BasicSplitPaneUI() {
             @Override
@@ -151,7 +152,8 @@ public class RegexTester {
             }
         });
         splitPane.setCursor(blankCursor);
-        splitPane.setDividerLocation(50);
+        splitPane.setResizeWeight(0.2); // Allow pattern pane to be resizable
+        splitPane.setDividerLocation(0.2); // Give pattern pane 20% of height initially
 
         JPanel topPanel = new JPanel();
         topPanel.setCursor(blankCursor);
@@ -161,7 +163,8 @@ public class RegexTester {
         JLabel patternJlabel = new JLabel("Pattern  ");
         patternJlabel.setCursor(blankCursor);
         patternJlabel.setVerticalAlignment(SwingConstants.TOP);
-        patternJlabel.setBackground(Color.LIGHT_GRAY);
+        patternJlabel.setBackground(Color.WHITE);
+        patternJlabel.setOpaque(true);
         patternJlabel.setFont(DEFAULT_LABEL_FONT);
         patternJlabel.setCursor(blankCursor);
 
@@ -193,85 +196,105 @@ public class RegexTester {
         bottomPanel.setCursor(blankCursor);
         characterPane = new JTextPane();
         characterPane.setCursor(blankCursor);
+        setupUndoFunctionality(characterPane);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
         auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        // Install UI so we can modify the divider
-        auxiliarySplit.setUI(new BasicSplitPaneUI() {
-            @Override
-            public BasicSplitPaneDivider createDefaultDivider() {
-                return new BasicSplitPaneDivider(this) {
-                    @Override
-                    public void setCursor(Cursor cursor) {
-                        // Force the divider to always use the blank cursor
-                        Cursor cursorToSet = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
-                        super.setCursor(cursorToSet);
-                    }
-                };
-            }
-        });
         auxiliarySplit.setCursor(blankCursor);
-        auxiliarySplit.setDividerSize(8); // Make the divider more visible and easier to grab
-        auxiliarySplit.setContinuousLayout(true); // Enable continuous layout for smoother resizing
-        auxiliarySplit.setResizeWeight(0.8); // Give more initial space to the top component
-        auxiliarySplit.setDividerLocation(0.8); // Set initial divider location as a ratio (80% for top, 20% for bottom)
+        auxiliarySplit.setDividerLocation(40);
         auxiliaryPane = new JTextPane();
-        auxiliaryPane.setCursor(blankCursor);
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
-
-        // Create a panel to hold the replacement label and text field with fixed height
-        JPanel replacementContainer = new JPanel(new BorderLayout()) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension size = super.getPreferredSize();
-                size.height = 30; // Fixed height for the replacement panel
-                return size;
-            }
-            
-            @Override
-            public Dimension getMaximumSize() {
-                Dimension size = super.getMaximumSize();
-                size.height = 30; // Fixed maximum height
-                return size;
-            }
-        };
-        replacementContainer.setCursor(blankCursor);
         
-        // Add label to the left of the replacement text field
-        replacementLabel = new JLabel("Replacement ");
-        replacementLabel.setFont(DEFAULT_LABEL_FONT);
-        replacementLabel.setCursor(blankCursor);
-        replacementContainer.add(replacementLabel, BorderLayout.WEST);
-        
-        // Add the replacement text field to the center of the panel
-        replacementPane = new JTextPane() {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension size = super.getPreferredSize();
-                size.height = 30; // Fixed height for the text field
-                return size;
-            }
-        };
+        replacementPane = new JTextPane();
         replacementPane.setCursor(blankCursor);
         replacementPane.setFont(DEFAULT_PANE_FONT);
-        replacementContainer.add(replacementPane, BorderLayout.CENTER);
         
-        // Add the container to the split pane
-        auxiliarySplit.add(replacementContainer);
+        // Create panel for replacement pane with label
+        replacementPanel = new JPanel();
+        replacementPanel.setLayout(new BorderLayout());
+        replacementPanel.setCursor(blankCursor);
+        replacementLabel = new JLabel("Replacement  ");
+        replacementLabel.setCursor(blankCursor);
+        replacementLabel.setVerticalAlignment(SwingConstants.TOP);
+        replacementLabel.setBackground(Color.WHITE);
+        replacementLabel.setOpaque(true);
+        replacementLabel.setFont(DEFAULT_LABEL_FONT);
+        replacementPanel.add(replacementLabel, BorderLayout.WEST);
+        replacementPanel.add(replacementPane, BorderLayout.CENTER);
         
-        // Initially hide the replacement label
-        replacementLabel.setVisible(false);
-        auxiliarySplit.add(auxiliaryPane);
+        // Create panel for auxiliary pane with label
+        JPanel auxiliaryPanel = new JPanel();
+        auxiliaryPanel.setLayout(new BorderLayout());
+        auxiliaryPanel.setCursor(blankCursor);
+        JLabel auxiliaryLabel = new JLabel("Results  ");
+        auxiliaryLabel.setCursor(blankCursor);
+        auxiliaryLabel.setVerticalAlignment(SwingConstants.TOP);
+        auxiliaryLabel.setBackground(Color.WHITE);
+        auxiliaryLabel.setOpaque(true);
+        auxiliaryLabel.setFont(DEFAULT_LABEL_FONT);
+        auxiliaryPanel.add(auxiliaryLabel, BorderLayout.NORTH);
+        auxiliaryPanel.add(auxiliaryPane, BorderLayout.CENTER);
+        
+        auxiliarySplit.add(replacementPanel);
+        auxiliarySplit.add(auxiliaryPanel);
+        
+        // Hide replacement panel initially since "find" is selected by default
+        replacementPanel.setVisible(false);
+        
         patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
         patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
         patternPane.setCursor(blankCursor);
+        
+        // Wrap pattern pane in a panel with border
+        JPanel patternPanelWrapper = new JPanel(new BorderLayout());
+        patternPanelWrapper.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        patternPanelWrapper.add(patternPane, BorderLayout.CENTER);
+        patternPanelWrapper.setCursor(blankCursor);
         JPanel buttonPanel = createButtonPanel(patternPane, characterPane, auxiliaryPane, replacementPane, buttonGroup);
         bottomPanel.add(buttonPanel, BorderLayout.NORTH);
 
         formatPatternPane(patternPane);
 
-        topPanel.add(patternPane, BorderLayout.CENTER);
+        // Add document listener to trigger height adjustment when text changes
+        patternPane.getStyledDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+                // Also trigger rerendering for pattern changes
+                SwingUtilities.invokeLater(() -> {
+                    patternPane.renderMatchingGroupsInCharacterPane();
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                });
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                System.out.println("RegexTester removeUpdate fired - length: " + e.getLength() + " offset: " + e.getOffset());
+                SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+                // Also trigger rerendering for pattern changes
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("RegexTester - calling renderCharacterPane after remove");
+                    patternPane.renderMatchingGroupsInCharacterPane();
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                });
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                SwingUtilities.invokeLater(RegexTester::adjustPatternPaneHeight);
+            }
+        });
+
+        // Add component listener to automatically adjust pattern pane height based on content
+        patternPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                adjustPatternPaneHeight();
+            }
+        });
+
+        topPanel.add(patternPanelWrapper, BorderLayout.CENTER);
 
         KeyAdapter keyListener = new KeyAdapter() {
             @Override
@@ -280,21 +303,28 @@ public class RegexTester {
                     return;
                 }
                 renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
             }
         };
+
         characterPane.addKeyListener(keyListener);
         patternPane.addKeyListener(keyListener);
         replacementPane.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
-                Pattern pattern = Pattern.compile(patternPane.getText(), flags);
-                Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
+                // Only re-render for split-with-delimiters when limit changes
+                String actionCommand = buttonGroup.getSelection().getActionCommand();
+                if ("split-with-delimiters".equals(actionCommand)) {
+                    Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                    Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), actionCommand);
+                }
             }
         });
 
         // even though there is a focus listener, we still need a mouse listener, in case the pattern pane already has
         // focus, when user clicks the mouse
-        patternPane.addMouseListener(new MouseAdapter() {
+        MouseAdapter mouseListener = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 StyledDocument styledDocument = patternPane.getStyledDocument();
@@ -308,19 +338,28 @@ public class RegexTester {
                     e1.printStackTrace();
                 }
             }
-        });
+        };
+        patternPane.addMouseListener(mouseListener);
+//        replacementPane.addMouseListener(mouseListener);
+        replacementPane.addKeyListener(keyListener);
 
 
         bottomPane.add(bottomPanel);
         bottomPane.add(auxiliarySplit);
         splitPane.add(bottomPane);
 
-        // Add title bar and content to frame
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(splitPane, BorderLayout.CENTER);
+        frame.getContentPane().add(splitPane);
 
         frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
+        
+        // Set divider location after frame is visible to get correct dimensions
+        SwingUtilities.invokeLater(() -> {
+            int totalWidth = bottomPane.getWidth();
+            if (totalWidth > 0) {
+                bottomPane.setDividerLocation((int)(totalWidth * 0.6));
+            }
+        });
 
         setCursorRecursively(frame.getContentPane(), cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
     }
@@ -329,20 +368,46 @@ public class RegexTester {
         patternPane.setFont(Constants.DEFAULT_PANE_FONT);
         patternPane.setForeground(Constants.FONT_COLOR);
         patternPane.setBackground(Constants.BACKGROUND_COLOR);
+        
+        // Add mouse wheel listener for font size adjustment
+        patternPane.addMouseWheelListener(e -> {
+            if (e.isControlDown()) {
+                Font currentFont = patternPane.getFont();
+                int newSize = currentFont.getSize() - e.getWheelRotation();
+                if (newSize >= 8 && newSize <= 72) {  // Limit font size between 8 and 72
+                    Font newFont = currentFont.deriveFont((float) newSize);
+                    patternPane.setFont(newFont);
+                    e.consume();
+                }
+            }
+        });
     }
 
     private static void formatCharacterPane(JTextPane characterPane) {
         characterPane.setForeground(Constants.FONT_COLOR);
         characterPane.setBackground(Constants.BACKGROUND_COLOR);
         characterPane.setFont(Constants.DEFAULT_PANE_FONT);
-
         characterPane.getStyledDocument().addStyle("highlights", null);
+        
+        // Add mouse wheel listener for font size adjustment
+        characterPane.addMouseWheelListener(e -> {
+            if (e.isControlDown()) {
+                Font currentFont = characterPane.getFont();
+                int newSize = currentFont.getSize() - e.getWheelRotation();
+                if (newSize >= 8 && newSize <= 72) {  // Limit font size between 8 and 72
+                    Font newFont = currentFont.deriveFont((float) newSize);
+                    characterPane.setFont(newFont);
+                    e.consume();
+                }
+            }
+        });
     }
 
     private static JPanel createButtonPanel(PatternPane patternPane, JTextPane characterPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
         JRadioButton matchButton = new JRadioButton("Matches");
         JRadioButton lookingAtButton = new JRadioButton("Looking at");
         JRadioButton splitButton = new JRadioButton("Split");
+        JRadioButton splitWithDelimitersButton = new JRadioButton("Split with delimiters");
         JRadioButton replaceAllButton = new JRadioButton("Replace all");
         JRadioButton replaceFirstButton = new JRadioButton("Replace first");
         JRadioButton findButton = new JRadioButton("Find");
@@ -351,6 +416,7 @@ public class RegexTester {
         matchButton.setCursor(Cursor.getDefaultCursor());
         lookingAtButton.setCursor(Cursor.getDefaultCursor());
         splitButton.setCursor(Cursor.getDefaultCursor());
+        splitWithDelimitersButton.setCursor(Cursor.getDefaultCursor());
         replaceAllButton.setCursor(Cursor.getDefaultCursor());
         replaceFirstButton.setCursor(Cursor.getDefaultCursor());
         findButton.setCursor(Cursor.getDefaultCursor());
@@ -360,6 +426,7 @@ public class RegexTester {
         matchButton.setActionCommand("matches");
         lookingAtButton.setActionCommand("looking-at");
         splitButton.setActionCommand("split");
+        splitWithDelimitersButton.setActionCommand("split-with-delimiters");
         replaceAllButton.setActionCommand("replace-all");
         replaceFirstButton.setActionCommand("replace-first");
 
@@ -367,6 +434,7 @@ public class RegexTester {
         buttonGroup.add(matchButton);
         buttonGroup.add(lookingAtButton);
         buttonGroup.add(splitButton);
+        buttonGroup.add(splitWithDelimitersButton);
         buttonGroup.add(replaceAllButton);
         buttonGroup.add(replaceFirstButton);
 
@@ -374,20 +442,10 @@ public class RegexTester {
         matchButton.setFont(DEFAULT_BUTTON_FONT);
         lookingAtButton.setFont(DEFAULT_BUTTON_FONT);
         splitButton.setFont(DEFAULT_BUTTON_FONT);
+        splitWithDelimitersButton.setFont(DEFAULT_BUTTON_FONT);
         replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
         replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setCursor(blankCursor);
-
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-        buttonPanel.add(findButton);
-        buttonPanel.add(matchButton);
-        buttonPanel.add(lookingAtButton);
-        buttonPanel.add(splitButton);
-        buttonPanel.add(replaceAllButton);
-        buttonPanel.add(replaceFirstButton);
-        buttonPanel.add(Box.createHorizontalGlue());
         JCheckBox caseButton = new JCheckBox("Case Insensitive");
         JCheckBox commentsButton = new JCheckBox("Comments");
         JCheckBox dotallButton = new JCheckBox("Dot All");
@@ -400,11 +458,6 @@ public class RegexTester {
         dotallButton.setCursor(Cursor.getDefaultCursor());
         literalButton.setCursor(Cursor.getDefaultCursor());
         multilineButton.setCursor(Cursor.getDefaultCursor());
-        buttonPanel.add(caseButton);
-        buttonPanel.add(commentsButton);
-        buttonPanel.add(dotallButton);
-        buttonPanel.add(literalButton);
-        buttonPanel.add(multilineButton);
 
         caseButton.setFont(DEFAULT_BUTTON_FONT);
         commentsButton.setFont(DEFAULT_BUTTON_FONT);
@@ -412,7 +465,77 @@ public class RegexTester {
         literalButton.setFont(DEFAULT_BUTTON_FONT);
         multilineButton.setFont(DEFAULT_BUTTON_FONT);
 
-        ActionListener recalcFlagListener = e -> {
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setCursor(blankCursor);
+        buttonPanel.setMinimumSize(new Dimension(100, 0)); // Allow height to grow when buttons wrap
+        buttonPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.add(findButton);
+        buttonPanel.add(matchButton);
+        buttonPanel.add(lookingAtButton);
+        buttonPanel.add(splitButton);
+        buttonPanel.add(splitWithDelimitersButton);
+        buttonPanel.add(replaceAllButton);
+        buttonPanel.add(replaceFirstButton);
+        buttonPanel.add(caseButton);
+        buttonPanel.add(commentsButton);
+        buttonPanel.add(dotallButton);
+        buttonPanel.add(literalButton);
+        buttonPanel.add(multilineButton);
+
+        // Add component listener to dynamically adjust height based on button layout
+        final boolean[] adjustingHeight = {false}; // Guard flag to prevent recursion
+        buttonPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                if (adjustingHeight[0]) return; // Prevent recursive calls
+                adjustingHeight[0] = true;
+                try {
+                    SwingUtilities.invokeLater(() -> {
+                        FlowLayout layout = (FlowLayout) buttonPanel.getLayout();
+                        int width = buttonPanel.getWidth();
+                        if (width <= 0) return; // Skip if not yet initialized
+                        
+                        // Get actual button height for more accurate calculation
+                        int buttonHeight = findButton.getPreferredSize().height;
+                        int lineHeight = buttonHeight + layout.getVgap();
+                        
+                        // Calculate required height based on actual button layout
+                        int totalWidth = 0;
+                        int maxWidth = width - layout.getHgap() * 2; // Account for margins
+                        int linesNeeded = 1;
+                        
+                        for (Component component : buttonPanel.getComponents()) {
+                            int componentWidth = component.getPreferredSize().width + layout.getHgap();
+                            if (totalWidth + componentWidth > maxWidth && totalWidth > 0) {
+                                linesNeeded++;
+                                totalWidth = componentWidth;
+                            } else {
+                                totalWidth += componentWidth;
+                            }
+                        }
+                        
+                        int requiredHeight = linesNeeded * lineHeight + layout.getVgap();
+                        Dimension currentSize = buttonPanel.getPreferredSize();
+                        if (currentSize.height != requiredHeight) {
+                            buttonPanel.setPreferredSize(new Dimension(width, requiredHeight));
+                            buttonPanel.revalidate();
+                        }
+                    });
+                } finally {
+                    adjustingHeight[0] = false;
+                }
+            }
+        });
+
+        caseButton.setFont(DEFAULT_BUTTON_FONT);
+        commentsButton.setFont(DEFAULT_BUTTON_FONT);
+        dotallButton.setFont(DEFAULT_BUTTON_FONT);
+        literalButton.setFont(DEFAULT_BUTTON_FONT);
+        multilineButton.setFont(DEFAULT_BUTTON_FONT);
+
+        ActionListener recalcFlagListener = _ -> {
             flags = recalculateFlags(caseButton, commentsButton, dotallButton, literalButton, multilineButton);
             renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
             patternPane.setFlags(flags);
@@ -422,29 +545,49 @@ public class RegexTester {
         dotallButton.addActionListener(recalcFlagListener);
         literalButton.addActionListener(recalcFlagListener);
         multilineButton.addActionListener(recalcFlagListener);
-        // Create a custom action listener that handles visibility of replacement label
-        ActionListener actionListener = e -> {
-            String command = buttonGroup.getSelection().getActionCommand();
-            // Show replacement label only for replace-all or replace-first
-            boolean showReplacement = command.equals("replace-all") || command.equals("replace-first");
-            replacementLabel.setVisible(showReplacement);
-            
-            // Refresh the layout
-            replacementLabel.revalidate();
-            
-            renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+        ActionListener actionListener = _ -> {
+            if (updatingVisibility) return; // Prevent recursive calls
+            updatingVisibility = true;
+            try {
+                // Update replacement label and visibility based on selected action
+                String actionCommand = buttonGroup.getSelection().getActionCommand();
+                if ("split-with-delimiters".equals(actionCommand)) {
+                    replacementLabel.setText("Limit  ");
+                    replacementPanel.setVisible(true);
+                    // Set minimum sizes and divider location
+                    replacementPanel.setMinimumSize(new Dimension(0, 40));
+                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                    auxiliarySplit.setDividerLocation(40);
+                } else if ("replace-all".equals(actionCommand) || "replace-first".equals(actionCommand)) {
+                    replacementLabel.setText("Replacement  ");
+                    replacementPanel.setVisible(true);
+                    // Set minimum sizes and divider location
+                    replacementPanel.setMinimumSize(new Dimension(0, 40));
+                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                    auxiliarySplit.setDividerLocation(40);
+                } else {
+                    replacementLabel.setText("Replacement  ");
+                    replacementPanel.setVisible(false);
+                    // Set minimum sizes to allow full collapse
+                    replacementPanel.setMinimumSize(new Dimension(0, 0));
+                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                    auxiliarySplit.setDividerLocation(0);
+                }
+                // Revalidate the split pane to apply visibility changes
+                auxiliarySplit.revalidate();
+                auxiliarySplit.repaint();
+                renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+            } finally {
+                updatingVisibility = false;
+            }
         };
-        
-        // Add the action listener to all radio buttons
         findButton.addActionListener(actionListener);
         lookingAtButton.addActionListener(actionListener);
         matchButton.addActionListener(actionListener);
         replaceAllButton.addActionListener(actionListener);
         replaceFirstButton.addActionListener(actionListener);
         splitButton.addActionListener(actionListener);
-        
-        // Trigger the action listener to set initial visibility
-        actionListener.actionPerformed(new ActionEvent(buttonGroup.getSelection().getActionCommand(), ActionEvent.ACTION_PERFORMED, ""));
+        splitWithDelimitersButton.addActionListener(actionListener);
         return buttonPanel;
     }
 
@@ -458,23 +601,96 @@ public class RegexTester {
         return flags;
     }
 
+    private static void adjustPatternPaneHeight() {
+        if (adjustingPatternHeight) return; // Prevent recursive calls
+        adjustingPatternHeight = true;
+        try {
+            // Calculate preferred height based on content
+            int preferredHeight = patternPane.getPreferredSize().height;
+            int totalHeight = splitPane.getHeight();
+            
+            if (totalHeight > 0 && preferredHeight > 0) {
+                // Calculate the divider location needed to show all content
+                double neededRatio = (double) preferredHeight / totalHeight;
+                // Clamp between 10% and 80% to prevent extreme sizes
+                double clampedRatio = Math.max(0.1, Math.min(0.8, neededRatio));
+                int neededLocation = (int) (clampedRatio * totalHeight);
+                
+                // Only update if the location is significantly different
+                int currentLocation = (int) splitPane.getDividerLocation();
+                if (Math.abs(currentLocation - neededLocation) > 5) {
+                    splitPane.setDividerLocation(clampedRatio);
+                }
+            }
+        } finally {
+            adjustingPatternHeight = false;
+        }
+    }
+
     private static JTextPane characterPane;
     private static PatternPane patternPane;
     private static JTextPane replacementPane;
-    private static JLabel replacementLabel; // Made this a class field
-    private static JSplitPane auxiliarySplit;
     private static JTextPane auxiliaryPane;
+    private static JLabel replacementLabel;
+    private static JPanel replacementPanel;
+    private static JSplitPane auxiliarySplit;
     private static boolean showingHelp = false;
+    private static boolean updatingVisibility = false;
+    private static boolean adjustingPatternHeight = false;
+
+    private static UndoManager setupUndoFunctionality(JTextPane textPane) {
+        UndoManager undoManager = new UndoManager();
+        // Set a reasonable limit for undo history (100 edits)
+        undoManager.setLimit(100);
+
+        // For regular text panes, add immediately
+        textPane.getDocument().addUndoableEditListener(e -> {
+            undoManager.addEdit(e.getEdit());
+            System.out.println("CharacterPane undo edit added: " + e.getEdit().getPresentationName());
+        });
+
+        // Add Ctrl+Z key binding for undo
+        InputMap inputMap = textPane.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = textPane.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), "undo");
+        actionMap.put("undo", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (undoManager.canUndo()) {
+                    undoManager.undo();
+                    System.out.println("Undo performed. Can undo: " + undoManager.canUndo() + ", Can redo: " + undoManager.canRedo());
+                    // Trigger a re-render if this is the pattern pane
+                } else {
+                    System.out.println("No more undo operations available");
+                }
+            }
+        });
+
+        // Also add Ctrl+Y for redo
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK), "redo");
+        actionMap.put("redo", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (undoManager.canRedo()) {
+                    undoManager.redo();
+                    System.out.println("Redo performed. Can undo: " + undoManager.canUndo() + ", Can redo: " + undoManager.canRedo());
+                    // Trigger a re-render if this is the pattern pane
+                } else {
+                    System.out.println("No more redo operations available");
+                }
+            }
+        });
+
+        return undoManager;
+    }
 
     private static void renderCharacterPane(JTextPane characterPane, PatternPane patternPane, JTextPane auxiliaryPane, JTextPane replacementPane, ButtonGroup buttonGroup) {
-        if (showingHelp) {
-            return; // Don't update the character pane when help is being shown
-        }
         try {
             String regex = patternPane.getText();
             Pattern pattern = Pattern.compile(regex, flags);
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, regex, buttonGroup.getSelection().getActionCommand());
-            patternPane.setBorder(Constants.WHITE_BORDER);
+//            patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             System.out.println("RegexTester.renderCharacterPane " + e);
             Renderer.resetColor(characterPane.getStyledDocument());

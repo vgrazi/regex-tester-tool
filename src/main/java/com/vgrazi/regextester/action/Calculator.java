@@ -81,7 +81,7 @@ public class Calculator {
      * @param auxiliaryPane
      * @return
      */
-    static List<ColorRange> processFinderCommand(Matcher matcher, String text, JEditorPane auxiliaryPane) {
+    static List<ColorRange> processFindCommand(Matcher matcher, String text, JEditorPane auxiliaryPane) {
         List<ColorRange> list = new ArrayList<>();
         int count = matcher.groupCount();
         StringBuilder groupString = new StringBuilder();
@@ -97,7 +97,7 @@ public class Calculator {
                 String group = matcher.group(i);
                 if (group != null) {
 //                    System.out.println(group);
-                    groupString.append(i).append(". ").append(group).append("\n");
+                    groupString.append(i).append(". ").append(group);
                     if (i == count) {
                         groupString.append("\n");
                     }
@@ -141,35 +141,48 @@ public class Calculator {
         return list;
     }
 
-    static List<ColorRange> processMatchesCommand(Matcher matcher, String text, JEditorPane auxiliaryPane) {
-        List<ColorRange> list = new ArrayList<>();
-        if (matcher.matches()) {
-            processCommand(matcher, list, text);
-            int count = matcher.groupCount();
-            StringBuilder groupString = new StringBuilder();
-            for (int i = 0; i <= count; i++) {
-                String group = matcher.group(i);
-                if (group != null) {
-                    groupString.append(i).append(". ").append(group).append("\n");
-                }
-            }
-            auxiliaryPane.setText(groupString.toString());
-        } else {
-            auxiliaryPane.setText("");
-        }
-        return list;
-    }
-
     static List<ColorRange> processSplitCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern) {
         List<ColorRange> list;
         list = processFindCommand(matcher, text);
         String[] split = pattern.split(text);
-        String splitString = "";
+        StringBuilder splitString = new StringBuilder();
         if (!"".equals(text)) {
             System.out.println(Arrays.asList(split));
-            splitString = ">" + String.join("\n>", split);
+            for(int i  = 0; i < split.length; i++){
+                splitString.append(i).append(": ").append(split[i]).append("\n");
+            }
         }
-        auxiliaryPane.setText(splitString);
+        auxiliaryPane.setText(splitString.toString());
+        return list;
+    }
+    static List<ColorRange> processSplitWithDelimitersCommand(Matcher matcher, String text, JTextPane auxiliaryPane, Pattern pattern, JTextPane replacementPane) {
+        List<ColorRange> list;
+        list = processFindCommand(matcher, text);
+        
+        // Parse limit from replacement pane text
+        int limit = 0; // default limit
+        String replacementText = replacementPane.getText().trim();
+        if (!replacementText.isEmpty()) {
+            try {
+                limit = Integer.parseInt(replacementText);
+                if (limit < 0) {
+                    limit = 0; // reset to default if negative
+                }
+            } catch (NumberFormatException e) {
+                // If parsing fails, use default limit of 0
+                limit = 0;
+            }
+        }
+        
+        String[] split = pattern.splitWithDelimiters(text, limit);
+        StringBuilder splitString = new StringBuilder();
+        if (!"".equals(text)) {
+            System.out.println(Arrays.asList(split));
+            for(int i  = 0; i < split.length; i++){
+                splitString.append(i).append(": ").append(split[i]).append("\n");
+            }
+        }
+        auxiliaryPane.setText(splitString.toString());
         return list;
     }
 

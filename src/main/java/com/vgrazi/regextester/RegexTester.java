@@ -38,6 +38,20 @@ public class RegexTester {
         cursorVisible = !cursorVisible;
         Cursor cursor = cursorVisible ? Cursor.getDefaultCursor() : blankCursor;
         setCursorRecursively(component, cursor);
+        
+        // Preserve specific cursors on text panes
+        if (characterPane != null) {
+            characterPane.setCursor(cursorVisible ? Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR) : blankCursor);
+        }
+        if (patternPane != null) {
+            patternPane.setCursor(cursorVisible ? Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR) : blankCursor);
+        }
+        if (replacementPane != null) {
+            replacementPane.setCursor(cursorVisible ? Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR) : blankCursor);
+        }
+        if (auxiliaryPane != null) {
+            auxiliaryPane.setCursor(cursorVisible ? Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) : blankCursor);
+        }
     }
 
     // Helper method to set cursor recursively on a component and its children
@@ -135,7 +149,7 @@ public class RegexTester {
             }
         });
 
-        // Apply it to the frame (or any component)
+        // Apply cursor to frame only (not recursively to preserve text cursors)
         frame.getContentPane().setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
         // Install UI so we can modify the divider
         splitPane.setUI(new BasicSplitPaneUI() {
@@ -195,7 +209,7 @@ public class RegexTester {
         bottomPanel.setLayout(new BorderLayout());
         bottomPanel.setCursor(blankCursor);
         characterPane = new JTextPane();
-        characterPane.setCursor(blankCursor);
+        characterPane.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         setupUndoFunctionality(characterPane);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
@@ -205,9 +219,10 @@ public class RegexTester {
         auxiliaryPane = new JTextPane();
         auxiliaryPane.setEditable(false);
         auxiliaryPane.setFont(DEFAULT_PANE_FONT);
+        auxiliaryPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         
         replacementPane = new JTextPane();
-        replacementPane.setCursor(blankCursor);
+        replacementPane.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         replacementPane.setFont(DEFAULT_PANE_FONT);
         
         // Create panel for replacement pane with label
@@ -244,7 +259,7 @@ public class RegexTester {
         
         patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
         patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
-        patternPane.setCursor(blankCursor);
+        patternPane.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         
         // Wrap pattern pane in a panel with border
         JPanel patternPanelWrapper = new JPanel(new BorderLayout());
@@ -361,7 +376,7 @@ public class RegexTester {
             }
         });
 
-        setCursorRecursively(frame.getContentPane(), cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
+        // Don't set cursor recursively to preserve text cursor on text panes
     }
 
     private static void formatPatternPane(PatternPane patternPane) {

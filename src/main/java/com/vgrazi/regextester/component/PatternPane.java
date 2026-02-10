@@ -152,8 +152,17 @@ public class PatternPane extends JTextPane {
     public void renderMatchingGroupsInCharacterPane() {
         String text = getText();
         Renderer.resetColor(getStyledDocument());
+        
+        // Check for syntax errors first
         try {
+            Pattern.compile(text, flags);
             setBorder(WHITE_BORDER);
+        } catch (PatternSyntaxException e) {
+            setBorder(RED_BORDER);
+            return; // Exit early if there's a syntax error
+        }
+        
+        try {
             auxiliaryPane.setLayout(new BoxLayout(auxiliaryPane, BoxLayout.Y_AXIS));
 //            List<String> names = extractNamedGroups(text);
 //            auxiliaryPane.removeAll();

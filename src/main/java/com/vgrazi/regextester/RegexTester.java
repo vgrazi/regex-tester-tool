@@ -658,10 +658,14 @@ public class RegexTester {
         // Set a reasonable limit for undo history (100 edits)
         undoManager.setLimit(100);
 
-        // For regular text panes, add immediately
+        // Only track text changes, not style changes from rendering
         textPane.getDocument().addUndoableEditListener(e -> {
-            undoManager.addEdit(e.getEdit());
-            System.out.println("CharacterPane undo edit added: " + e.getEdit().getPresentationName());
+            // Filter out style/color changes - only track actual text modifications
+            String presentationName = e.getEdit().getPresentationName();
+            if (!"style change".equals(presentationName) && !"color change".equals(presentationName)) {
+                undoManager.addEdit(e.getEdit());
+                System.out.println("Text undo edit added: " + presentationName);
+            }
         });
 
         // Add Ctrl+Z key binding for undo

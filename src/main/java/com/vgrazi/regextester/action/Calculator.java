@@ -36,7 +36,7 @@ public class Calculator {
         for (int index = 0; index < regex.length(); index++) {
             char ch = regex.charAt(index);
             if (ch == '(') {
-                if (isNotEscaped(regex, index)) {
+                if (isNotEscaped(regex, index) && !isNonCapturingGroup(regex, index)) {
                     // for now, set the size == 0. We will adjust it as required when a right paren turns up
                     ColorRange colorRange = new ColorRange(color, index, 0, false);
                     stack.push(colorRange);
@@ -44,11 +44,30 @@ public class Calculator {
                 }
             } else if (ch == ')') {
                 if (isNotEscaped(regex, index)) {
-                    if (!stack.isEmpty()) {
-                        ColorRange colorRange = stack.pop();
-                        colorRange.setEnd(index);
-                    } else {
-                        throw new UnmatchedLeftParenException(index);
+                    // Find the corresponding opening parenthesis for this closing one
+                    int parenCount = 0;
+                    boolean foundNonCapturing = false;
+                    for (int i = index - 1; i >= 0; i--) {
+                        if (regex.charAt(i) == ')') {
+                            parenCount++;
+                        } else if (regex.charAt(i) == '(' && isNotEscaped(regex, i)) {
+                            if (parenCount == 0) {
+                                foundNonCapturing = isNonCapturingGroup(regex, i);
+                                break;
+                            } else {
+                                parenCount--;
+                            }
+                        }
+                    }
+                    
+                    // Only process if this closing paren belongs to a capturing group
+                    if (!foundNonCapturing) {
+                        if (!stack.isEmpty()) {
+                            ColorRange colorRange = stack.pop();
+                            colorRange.setEnd(index);
+                        } else {
+                            throw new UnmatchedLeftParenException(index);
+                        }
                     }
                 }
             }
@@ -97,7 +116,7 @@ public class Calculator {
                 String group = matcher.group(i);
                 if (group != null) {
 //                    System.out.println(group);
-                    groupString.append(i).append(". ").append(group);
+                    groupString.append(i).append(". ").append(group).append("\n");
                     if (i == count) {
                         groupString.append("\n");
                     }
@@ -330,5 +349,43 @@ public class Calculator {
             }
         }
         return count % 2 == 0;
+    }
+
+    /**
+     * checks if the parenthesis at the supplied index starts a non-capturing group
+     * Non-capturing groups include:
+     * (?:...) - non-capturing group
+     * (?=...) - positive lookahead
+     * (?!...) - negative lookahead
+     * (?<=...) - positive lookbehind
+     * (?<!...) - negative lookbehind
+     * (?>...) - atomic group
+     * (?#...) - comment
+     * 
+     * @param regex the regex pattern
+     * @param index the index of the opening parenthesis
+     * @return true if this is a non-capturing group, false otherwise
+     */
+    private static boolean isNonCapturingGroup(String regex, int index) {
+        if (index + 1 >= regex.length()) {
+            return false;
+        }
+        
+        // Check if the next character after '(' is '?'
+        if (regex.charAt(index + 1) == '?') {
+            if (index + 2 >= regex.length()) {
+                return false;
+            }
+            
+            char thirdChar = regex.charAt(index + 2);
+            return thirdChar == ':' ||      // (?:...) non-capturing group
+                   thirdChar == '=' ||      // (?=...) positive lookahead  
+                   thirdChar == '!' ||      // (?!...) negative lookahead
+                   thirdChar == '<' ||      // (?<=...) or (?<!...) lookbehind
+                   thirdChar == '>' ||      // (?>...) atomic group
+                   thirdChar == '#';        // (?#...) comment
+        }
+        
+        return false;
     }
 }

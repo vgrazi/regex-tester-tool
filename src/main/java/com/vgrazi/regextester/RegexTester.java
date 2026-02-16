@@ -422,6 +422,7 @@ public class RegexTester {
         JRadioButton matchButton = new JRadioButton("Matches");
         JRadioButton lookingAtButton = new JRadioButton("Looking at");
         JRadioButton splitButton = new JRadioButton("Split");
+        JRadioButton splitWithLimitButton = new JRadioButton("Split (with Limit)");
         JRadioButton splitWithDelimitersButton = new JRadioButton("Split with delimiters");
         JRadioButton replaceAllButton = new JRadioButton("Replace all");
         JRadioButton replaceFirstButton = new JRadioButton("Replace first");
@@ -432,6 +433,7 @@ public class RegexTester {
         lookingAtButton.setCursor(Cursor.getDefaultCursor());
         splitButton.setCursor(Cursor.getDefaultCursor());
         splitWithDelimitersButton.setCursor(Cursor.getDefaultCursor());
+        splitWithLimitButton.setCursor(Cursor.getDefaultCursor());
         replaceAllButton.setCursor(Cursor.getDefaultCursor());
         replaceFirstButton.setCursor(Cursor.getDefaultCursor());
         findButton.setCursor(Cursor.getDefaultCursor());
@@ -441,6 +443,7 @@ public class RegexTester {
         matchButton.setActionCommand("matches");
         lookingAtButton.setActionCommand("looking-at");
         splitButton.setActionCommand("split");
+        splitWithLimitButton.setActionCommand("split-with-limit");
         splitWithDelimitersButton.setActionCommand("split-with-delimiters");
         replaceAllButton.setActionCommand("replace-all");
         replaceFirstButton.setActionCommand("replace-first");
@@ -449,6 +452,7 @@ public class RegexTester {
         buttonGroup.add(matchButton);
         buttonGroup.add(lookingAtButton);
         buttonGroup.add(splitButton);
+        buttonGroup.add(splitWithLimitButton);
         buttonGroup.add(splitWithDelimitersButton);
         buttonGroup.add(replaceAllButton);
         buttonGroup.add(replaceFirstButton);
@@ -457,6 +461,7 @@ public class RegexTester {
         matchButton.setFont(DEFAULT_BUTTON_FONT);
         lookingAtButton.setFont(DEFAULT_BUTTON_FONT);
         splitButton.setFont(DEFAULT_BUTTON_FONT);
+        splitWithLimitButton.setFont(DEFAULT_BUTTON_FONT);
         splitWithDelimitersButton.setFont(DEFAULT_BUTTON_FONT);
         replaceAllButton.setFont(DEFAULT_BUTTON_FONT);
         replaceFirstButton.setFont(DEFAULT_BUTTON_FONT);
@@ -490,6 +495,7 @@ public class RegexTester {
         buttonPanel.add(matchButton);
         buttonPanel.add(lookingAtButton);
         buttonPanel.add(splitButton);
+        buttonPanel.add(splitWithLimitButton);
         buttonPanel.add(splitWithDelimitersButton);
         buttonPanel.add(replaceAllButton);
         buttonPanel.add(replaceFirstButton);
@@ -566,27 +572,31 @@ public class RegexTester {
             try {
                 // Update replacement label and visibility based on selected action
                 String actionCommand = buttonGroup.getSelection().getActionCommand();
-                if ("split-with-delimiters".equals(actionCommand)) {
-                    replacementLabel.setText("Limit  ");
-                    replacementPanel.setVisible(true);
-                    // Set minimum sizes and divider location
-                    replacementPanel.setMinimumSize(new Dimension(0, 40));
-                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
-                    auxiliarySplit.setDividerLocation(40);
-                } else if ("replace-all".equals(actionCommand) || "replace-first".equals(actionCommand)) {
-                    replacementLabel.setText("Replacement  ");
-                    replacementPanel.setVisible(true);
-                    // Set minimum sizes and divider location
-                    replacementPanel.setMinimumSize(new Dimension(0, 40));
-                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
-                    auxiliarySplit.setDividerLocation(40);
-                } else {
-                    replacementLabel.setText("Replacement  ");
-                    replacementPanel.setVisible(false);
-                    // Set minimum sizes to allow full collapse
-                    replacementPanel.setMinimumSize(new Dimension(0, 0));
-                    auxiliaryPane.setMinimumSize(new Dimension(0, 0));
-                    auxiliarySplit.setDividerLocation(0);
+                switch (actionCommand) {
+                    case "split-with-limit", "split-with-delimiters" -> {
+                        replacementLabel.setText("Limit  ");
+                        replacementPanel.setVisible(true);
+                        // Set minimum sizes and divider location
+                        replacementPanel.setMinimumSize(new Dimension(0, 40));
+                        auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                        auxiliarySplit.setDividerLocation(40);
+                    }
+                    case "replace-all", "replace-first" -> {
+                        replacementLabel.setText("Replacement  ");
+                        replacementPanel.setVisible(true);
+                        // Set minimum sizes and divider location
+                        replacementPanel.setMinimumSize(new Dimension(0, 40));
+                        auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                        auxiliarySplit.setDividerLocation(40);
+                    }
+                    case null, default -> {
+                        replacementLabel.setText("Replacement  ");
+                        replacementPanel.setVisible(false);
+                        // Set minimum sizes to allow full collapse
+                        replacementPanel.setMinimumSize(new Dimension(0, 0));
+                        auxiliaryPane.setMinimumSize(new Dimension(0, 0));
+                        auxiliarySplit.setDividerLocation(0);
+                    }
                 }
                 // Revalidate the split pane to apply visibility changes
                 auxiliarySplit.revalidate();
@@ -602,6 +612,7 @@ public class RegexTester {
         replaceAllButton.addActionListener(actionListener);
         replaceFirstButton.addActionListener(actionListener);
         splitButton.addActionListener(actionListener);
+        splitWithLimitButton.addActionListener(actionListener);
         splitWithDelimitersButton.addActionListener(actionListener);
         return buttonPanel;
     }

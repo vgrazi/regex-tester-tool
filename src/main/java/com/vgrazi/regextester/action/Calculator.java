@@ -116,7 +116,18 @@ public class Calculator {
                 String group = matcher.group(i);
                 if (group != null) {
 //                    System.out.println(group);
-                    groupString.append(i).append(". ").append(group).append("\n");
+                    groupString.append(i).append(". ").append(group);
+                    // the following new line is required for this pattern and input
+//                    ^(?!/admin\b)(?!/api\b)(?!/(static|assets)\b)(?!/healthz?\b).+
+                    // /users/123
+                    // /assets/
+                    // /healthy
+
+                    // However it adds an extra newline at the end
+                    // (<.*?>)
+                    // <p>Hello <b>world</b>!</p> <iframe src='hello-world.com'></iframe>
+
+                                                           groupString.append("\n"); // this adds extra space in find command.append("\n");
                     if (i == count) {
                         groupString.append("\n");
                     }

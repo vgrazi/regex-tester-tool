@@ -52,6 +52,15 @@ public class RegexTester {
         if (auxiliaryPane != null) {
             auxiliaryPane.setCursor(cursorVisible ? Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) : blankCursor);
         }
+        if (exceptionPane != null) {
+            exceptionPane.setCursor(cursorVisible ? Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) : blankCursor);
+        }
+        if (exceptionScrollPane != null) {
+            exceptionScrollPane.setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
+        }
+        if (exceptionPanel != null) {
+            exceptionPanel.setCursor(cursorVisible ? Cursor.getDefaultCursor() : blankCursor);
+        }
     }
 
     // Helper method to set cursor recursively on a component and its children
@@ -320,9 +329,13 @@ public class RegexTester {
                 if (e.isActionKey() || e.getKeyChar() == KeyEvent.CHAR_UNDEFINED) {
                     return;
                 }
-                renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
-                Pattern pattern = Pattern.compile(patternPane.getText(), flags);
-                Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
+                try {
+                    renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup);
+                    Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                    Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), buttonGroup.getSelection().getActionCommand());
+                } catch (Exception ex) {
+                    showException(ex);
+                }
             }
         };
 
@@ -332,10 +345,14 @@ public class RegexTester {
             @Override
             public void keyTyped(KeyEvent e) {
                 // Only re-render for split-with-delimiters when limit changes
-                String actionCommand = buttonGroup.getSelection().getActionCommand();
-                if ("split-with-delimiters".equals(actionCommand)) {
-                    Pattern pattern = Pattern.compile(patternPane.getText(), flags);
-                    Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), actionCommand);
+                try {
+                    String actionCommand = buttonGroup.getSelection().getActionCommand();
+                    if ("split-with-delimiters".equals(actionCommand)) {
+                        Pattern pattern = Pattern.compile(patternPane.getText(), flags);
+                        Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, patternPane.getText(), actionCommand);
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
                 }
             }
         });
@@ -354,6 +371,10 @@ public class RegexTester {
                     patternPane.renderMatchingGroupsInCharacterPane();
                 } catch (BadLocationException e1) {
                     e1.printStackTrace();
+                    showException(e1);
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                    showException(e1);
                 }
             }
         };
@@ -366,7 +387,40 @@ public class RegexTester {
         bottomPane.add(auxiliarySplit);
         splitPane.add(bottomPane);
 
-        frame.getContentPane().add(splitPane);
+        frame.getContentPane().add(splitPane, BorderLayout.CENTER);
+        
+        // Create exception pane at the very bottom (south)
+        exceptionPane = new JTextPane();
+        exceptionPane.setEditable(false);
+        exceptionPane.setFont(new Font("Courier New", Font.PLAIN, 24));
+        exceptionPane.setBackground(Color.PINK);
+        exceptionPane.setForeground(Color.RED);
+        exceptionPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        
+        // Wrap exception pane in a scroll pane
+        exceptionScrollPane = new JScrollPane(exceptionPane);
+        exceptionScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        exceptionScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        exceptionScrollPane.setPreferredSize(new Dimension(frame.getWidth(), (int)(frame.getHeight() * 0.2)));
+        
+        // Create panel for exception pane with label
+        exceptionPanel = new JPanel();
+        exceptionPanel.setLayout(new BorderLayout());
+        exceptionPanel.setCursor(blankCursor);
+        JLabel exceptionLabel = new JLabel("Exceptions  ");
+        exceptionLabel.setCursor(blankCursor);
+        exceptionLabel.setVerticalAlignment(SwingConstants.TOP);
+        exceptionLabel.setBackground(Color.WHITE);
+        exceptionLabel.setOpaque(true);
+        exceptionLabel.setFont(DEFAULT_LABEL_FONT);
+        exceptionPanel.add(exceptionLabel, BorderLayout.WEST);
+        exceptionPanel.add(exceptionScrollPane, BorderLayout.CENTER);
+        
+        // Initially hide exception panel
+        exceptionPanel.setVisible(false);
+        
+        // Add exception panel to the south of the frame
+        frame.getContentPane().add(exceptionPanel, BorderLayout.SOUTH);
 
         frame.setBounds(10, 100, 1200, 600);
         frame.setVisible(true);
@@ -376,6 +430,13 @@ public class RegexTester {
             int totalWidth = bottomPane.getWidth();
             if (totalWidth > 0) {
                 bottomPane.setDividerLocation((int)(totalWidth * 0.6));
+            }
+            
+            // Update exception scroll pane preferred size to 20% of frame height
+            int frameHeight = frame.getHeight();
+            if (frameHeight > 0) {
+                exceptionScrollPane.setPreferredSize(new Dimension(frame.getWidth(), (int)(frameHeight * 0.2)));
+                exceptionScrollPane.revalidate();
             }
         });
 
@@ -660,6 +721,9 @@ public class RegexTester {
     private static PatternPane patternPane;
     private static JTextPane replacementPane;
     private static JTextPane auxiliaryPane;
+    private static JTextPane exceptionPane;
+    private static JScrollPane exceptionScrollPane;
+    private static JPanel exceptionPanel;
     private static JLabel replacementLabel;
     private static JPanel replacementPanel;
     private static JSplitPane auxiliarySplit;
@@ -735,13 +799,64 @@ public class RegexTester {
             String regex = patternPane.getText();
             Pattern pattern = Pattern.compile(regex, flags);
             Renderer.renderCharacterPane(characterPane, auxiliaryPane, pattern, replacementPane, regex, buttonGroup.getSelection().getActionCommand());
-//            patternPane.setBorder(Constants.WHITE_BORDER);
+            // Clear and hide exception pane when compilation succeeds
+            hideException();
+            patternPane.setBorder(Constants.WHITE_BORDER);
         } catch (Exception e) {
             System.out.println("RegexTester.renderCharacterPane " + e);
             Renderer.resetColor(characterPane.getStyledDocument());
-
             patternPane.setBorder(Constants.RED_BORDER);
+            showException(e);
+        }
+    }
 
+    private static void hideException() {
+        SwingUtilities.invokeLater(() -> {
+            if (exceptionPane != null) {
+                exceptionPane.setText("");
+                // Scroll to top
+                exceptionPane.setCaretPosition(0);
+            }
+            if (exceptionPanel != null) {
+                exceptionPanel.setVisible(false);
+                exceptionPanel.revalidate();
+                exceptionPanel.repaint();
+            }
+        });
+    }
+
+    private static void showException(Exception e) {
+        if (exceptionPane != null) {
+            String exceptionText = e.getClass().getSimpleName() + ": " + e.getMessage();
+            if (e.getMessage() == null || e.getMessage().isEmpty()) {
+                exceptionText = e.getClass().getSimpleName() + " occurred";
+            }
+            
+            // Add stack trace for more detail
+            StackTraceElement[] stackTrace = e.getStackTrace();
+            if (stackTrace.length > 0) {
+                exceptionText += "\n\nStack trace:\n";
+                for (int i = 0; i < Math.min(3, stackTrace.length); i++) {
+                    exceptionText += "  at " + stackTrace[i].toString() + "\n";
+                }
+                if (stackTrace.length > 3) {
+                    exceptionText += "  ... " + (stackTrace.length - 3) + " more";
+                }
+            }
+            
+            exceptionPane.setText(exceptionText);
+            
+            // Scroll to top when showing new exception
+            exceptionPane.setCaretPosition(0);
+            
+            // Show the exception panel directly
+            SwingUtilities.invokeLater(() -> {
+                if (exceptionPanel != null) {
+                    exceptionPanel.setVisible(true);
+                    exceptionPanel.revalidate();
+                    exceptionPanel.repaint();
+                }
+            });
         }
     }
 }

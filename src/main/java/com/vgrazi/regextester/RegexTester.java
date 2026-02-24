@@ -69,6 +69,9 @@ public class RegexTester {
         JFrame frame = new JFrame("Regex Test Tool");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
+        // Create buttonGroup early so it's available for undo functionality
+        ButtonGroup buttonGroup = new ButtonGroup();
+
         // Add F1 and F2 key bindings to switch focus
         InputMap inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = frame.getRootPane().getActionMap();
@@ -124,7 +127,6 @@ public class RegexTester {
 
         // F10 - Toggle help
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0), "showHelp");
-        ButtonGroup buttonGroup = new ButtonGroup();
 
         actionMap.put("showHelp", new AbstractAction() {
             @Override
@@ -210,7 +212,7 @@ public class RegexTester {
         bottomPanel.setCursor(blankCursor);
         characterPane = new JTextPane();
         characterPane.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
-        setupUndoFunctionality(characterPane);
+        UndoManager characterUndoManager = setupUndoFunctionality(characterPane, buttonGroup);
         formatCharacterPane(characterPane);
         bottomPanel.add(characterPane, BorderLayout.CENTER);
         auxiliarySplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -260,6 +262,7 @@ public class RegexTester {
         patternPane = new PatternPane(characterPane, auxiliaryPane, replacementPane);
         patternPane.setCharacterPaneRenderer(() -> renderCharacterPane(characterPane, patternPane, auxiliaryPane, replacementPane, buttonGroup));
         patternPane.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+        UndoManager patternUndoManager = setupUndoFunctionality(patternPane, buttonGroup);
         
         // Wrap pattern pane in a panel with border
         JPanel patternPanelWrapper = new JPanel(new BorderLayout());
@@ -664,7 +667,7 @@ public class RegexTester {
     private static boolean updatingVisibility = false;
     private static boolean adjustingPatternHeight = false;
 
-    private static UndoManager setupUndoFunctionality(JTextPane textPane) {
+    private static UndoManager setupUndoFunctionality(JTextPane textPane, ButtonGroup buttonGroup) {
         UndoManager undoManager = new UndoManager();
         // Set a reasonable limit for undo history (100 edits)
         undoManager.setLimit(100);
@@ -691,6 +694,12 @@ public class RegexTester {
                     undoManager.undo();
                     System.out.println("Undo performed. Can undo: " + undoManager.canUndo() + ", Can redo: " + undoManager.canRedo());
                     // Trigger a re-render if this is the pattern pane
+                    if (textPane instanceof PatternPane) {
+                        SwingUtilities.invokeLater(() -> {
+                            ((PatternPane) textPane).renderMatchingGroupsInCharacterPane();
+                            renderCharacterPane(characterPane, (PatternPane) textPane, auxiliaryPane, replacementPane, buttonGroup);
+                        });
+                    }
                 } else {
                     System.out.println("No more undo operations available");
                 }
@@ -706,6 +715,12 @@ public class RegexTester {
                     undoManager.redo();
                     System.out.println("Redo performed. Can undo: " + undoManager.canUndo() + ", Can redo: " + undoManager.canRedo());
                     // Trigger a re-render if this is the pattern pane
+                    if (textPane instanceof PatternPane) {
+                        SwingUtilities.invokeLater(() -> {
+                            ((PatternPane) textPane).renderMatchingGroupsInCharacterPane();
+                            renderCharacterPane(characterPane, (PatternPane) textPane, auxiliaryPane, replacementPane, buttonGroup);
+                        });
+                    }
                 } else {
                     System.out.println("No more redo operations available");
                 }

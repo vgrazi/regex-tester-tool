@@ -1,6 +1,6 @@
 /target/
 !.mvn/wrapper/maven-wrapper.jar
-
+*.class
 ### STS ###
 .apt_generated
 .classpath
@@ -31,3 +31,4 @@ mvnw.cmd
 !/src/
 !/pom.xml
 /src/main/java/com/vgrazi/regextester/playpen.java
+/src/main/java/com/vgrazi/regextester/action/Calculator.class

@@ -9,6 +9,7 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.datatransfer.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -127,7 +128,28 @@ public class PatternPane extends JTextPane {
 
     @Override
     public void paste() {
-        super.paste();
+        // Get clipboard content and process it to remove Java-escaped backslashes
+        try {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            Transferable transferable = clipboard.getContents(null);
+            if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                String text = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+                // Remove escaped backslashes (convert \\ to \)
+                String processedText = text.replace("\\\\", "\\");
+                // Replace the clipboard content temporarily
+                StringSelection selection = new StringSelection(processedText);
+                clipboard.setContents(selection, selection);
+                super.paste();
+                // Restore original clipboard content
+                StringSelection originalSelection = new StringSelection(text);
+                clipboard.setContents(originalSelection, originalSelection);
+            } else {
+                super.paste();
+            }
+        } catch (Exception e) {
+            // If any error occurs, fall back to normal paste
+            super.paste();
+        }
         triggerRerender();
     }
 
